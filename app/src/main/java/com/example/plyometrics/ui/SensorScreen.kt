@@ -4,10 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,9 +17,8 @@ import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
 fun SensorScreen(viewModel: SensorViewModel) {
-    val acceleration by viewModel.acceleration.collectAsState()
-    val session by viewModel.session.collectAsState()
     val isRunning by viewModel.isRunning.collectAsState()
+    val result by viewModel.jumpResult.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -38,19 +34,12 @@ fun SensorScreen(viewModel: SensorViewModel) {
             Text(if(isRunning) "Stop" else "Start")
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(24.dp))
 
-        Text("X : ${acceleration.x}")
-        Text("Y : ${acceleration.y}")
-        Text("Z : ${acceleration.z}")
-        Text("Magnitude : ${acceleration.magnitude}")
-
-        Spacer(Modifier.height(16.dp))
-
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            items(session) { point ->
-                Text("${point.time} ms : ${point.acceleration.magnitude}")
-            }
+        result?.let { jump ->
+            Text(text = "Flight time: ${jump.flightTime} ms")
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Jump height: %.2f m".format(jump.height))
         }
     }
 }
