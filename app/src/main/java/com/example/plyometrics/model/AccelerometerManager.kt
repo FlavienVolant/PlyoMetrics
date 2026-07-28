@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -33,6 +34,11 @@ class AccelerometerManager (
 
     fun stop() {
         sensorManager.unregisterListener(this)
+
+        for (point in session) {
+            Log.d("SensorSession", "${point.time}, ${point.acceleration.magnitude}")
+        }
+
         onSessionFinished(session.toList())
     }
 

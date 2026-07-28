@@ -8,6 +8,16 @@ class JumpDetector {
     private val TAKE_OFF_THRESHOLD = 3f
     private val LANDING_THRESHOLD = 15f
 
+    /**
+     * Return the jump of a sensor session
+     *
+     * A jump if detected by finding:
+     * - the impulse
+     * - the take-off
+     * - the landing
+     *
+     * Returns a [JumpResult] if all events are found, null otherwise
+     */
     fun analyze(points: List<SensorPoint>): JumpResult? {
 
         val impulse = findImpulse(points) ?: return null
@@ -22,6 +32,13 @@ class JumpDetector {
         )
     }
 
+    /**
+     * Finds the [SensorPoint] corresponding to the impulse of the jump
+     *
+     * The impulse is the first acceleration peak
+     *
+     * Returns null if no impulse is found
+     */
     fun findImpulse(points: List<SensorPoint>): SensorPoint? {
 
         for (i in 1 until points.size - 1) {
@@ -43,6 +60,14 @@ class JumpDetector {
         return null
     }
 
+    /**
+     * Finds the [SensorPoint] corresponding to the take-off of the jump
+     *
+     * The search starts after the impulse, the take-off is detected when the
+     * acceleration becomes close to zero
+     *
+     * Returns null if no take-off is found
+     */
     fun findTakeOff(points: List<SensorPoint>, impulse: SensorPoint): SensorPoint? {
 
         val startIndex = points.indexOf(impulse)
@@ -61,6 +86,14 @@ class JumpDetector {
         return null
     }
 
+    /**
+     * Finds the [SensorPoint] corresponding to the landing of the jump
+     *
+     * The search starts after the take-off, the landing is detected as the
+     * first acceleration peak
+     *
+     * Returns null if no landing is found
+     */
     fun findLanding(points: List<SensorPoint>, takeOff: SensorPoint): SensorPoint? {
 
         val startIndex = points.indexOf(takeOff)
