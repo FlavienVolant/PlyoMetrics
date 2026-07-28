@@ -29,7 +29,7 @@ class AccelerometerManager (
     fun start() {
         session.clear()
         startTimestamp = 0L
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     fun stop() {
