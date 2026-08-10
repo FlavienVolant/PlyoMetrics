@@ -31,11 +31,6 @@ class AccelerometerManager (
 
     fun stop() {
         sensorManager.unregisterListener(this)
-
-        for (point in session) {
-            Log.d("SensorSession", "${point.time}, ${point.acceleration.magnitude}")
-        }
-
         onSessionFinished(session.toList())
     }
 
