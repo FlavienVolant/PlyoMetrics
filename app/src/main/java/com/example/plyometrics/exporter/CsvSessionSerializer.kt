@@ -13,7 +13,7 @@ class CsvSessionSerializer : SessionSerializer {
                     "${point.timestamp}," +
                             "${point.acceleration.x}," +
                             "${point.acceleration.y}," +
-                            "${point.acceleration.z}" +
+                            "${point.acceleration.z}," +
                             "${point.rotationVector[0]}," +
                             "${point.rotationVector[1]}," +
                             "${point.rotationVector[2]}," +
