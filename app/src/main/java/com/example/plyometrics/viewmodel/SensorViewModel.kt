@@ -8,6 +8,8 @@ import com.example.plyometrics.model.AccelerometerManager
 import com.example.plyometrics.model.SensorPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class SensorViewModel (application: Application) : AndroidViewModel(application){
 
@@ -18,12 +20,13 @@ class SensorViewModel (application: Application) : AndroidViewModel(application)
     private val _jumpResult = MutableStateFlow<JumpResult?>(null)
     val jumpResult = _jumpResult.asStateFlow()
 
+    private lateinit var finishedSession: List<SensorPoint>
+
     private val manager = AccelerometerManager(application) { finishedSession ->
         _isRunning.value = false
+        this.finishedSession = finishedSession
         _jumpResult.value = jumpDetector.analyze(finishedSession)
     }
-
-    val acceleration = manager.acceleration
 
     fun start() {
         _jumpResult.value = null
@@ -35,9 +38,5 @@ class SensorViewModel (application: Application) : AndroidViewModel(application)
         manager.stop()
     }
 
-    private fun analyzeJump(points: List<SensorPoint>) {
-
-        val result = jumpDetector.analyze(points)
-        _jumpResult.value = result
-    }
+    fun exportSession() = Json.encodeToString(finishedSession)
 }

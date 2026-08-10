@@ -1,5 +1,8 @@
 package com.example.plyometrics.ui.screen
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,10 +13,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.ui.components.EmptyState
+import com.example.plyometrics.ui.components.ExportButton
 import com.example.plyometrics.ui.components.JumpResultCard
 import com.example.plyometrics.ui.components.RecordingCard
 import com.example.plyometrics.ui.components.StartButton
@@ -22,6 +27,8 @@ import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
 fun SensorScreen(viewModel: SensorViewModel) {
+    val context = LocalContext.current
+
     val isRunning by viewModel.isRunning.collectAsState()
     val result by viewModel.jumpResult.collectAsState()
 
@@ -34,12 +41,32 @@ fun SensorScreen(viewModel: SensorViewModel) {
             } else {
                 viewModel.start()
             }
+        },
+        onExportSession = {
+            val json = viewModel.exportSession()
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/json"
+                putExtra(Intent.EXTRA_TEXT, json)
+            }
+
+            try {
+                context.startActivity(
+                    Intent.createChooser(intent, "Export Session")
+                )
+            }catch (e: ActivityNotFoundException) {
+                Log.e("SensorScreen", e.toString())
+            }
         }
     )
 }
 
 @Composable
-private fun SensorScreen(isRunning: Boolean, result: JumpResult?, onStartStop: () -> Unit) {
+private fun SensorScreen(
+    isRunning: Boolean,
+    result: JumpResult?,
+    onStartStop: () -> Unit,
+    onExportSession: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -49,7 +76,11 @@ private fun SensorScreen(isRunning: Boolean, result: JumpResult?, onStartStop: (
         when {
             isRunning -> RecordingCard()
 
-            result != null -> JumpResultCard(result)
+            result != null -> {
+                JumpResultCard(result)
+                Spacer(modifier = Modifier.height(16.dp))
+                ExportButton(onClick = onExportSession)
+            }
 
             else -> EmptyState()
         }
@@ -70,7 +101,8 @@ private fun SensorScreenReadyNotRunningPreview() {
         SensorScreen(
             isRunning = false,
             result = null,
-            onStartStop = {}
+            onStartStop = {},
+            onExportSession = {}
         )
     }
 }
@@ -82,7 +114,8 @@ private fun SensorScreenReadyRunningPreview() {
         SensorScreen(
             isRunning = true,
             result = null,
-            onStartStop = {}
+            onStartStop = {},
+            onExportSession = {}
         )
     }
 }
@@ -97,7 +130,8 @@ private fun SensorScreenReadyWithResultPreview() {
                 takeOffTime = 0,
                 landingTime = 620
             ),
-            onStartStop = {}
+            onStartStop = {},
+            onExportSession = {}
         )
     }
 }

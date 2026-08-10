@@ -7,7 +7,6 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class AccelerometerManager (
     context: Context,
@@ -19,8 +18,6 @@ class AccelerometerManager (
     private val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
     private val _acceleration = MutableStateFlow(Acceleration(0f, 0f, 0f))
-
-    val acceleration = _acceleration.asStateFlow()
 
     private val session = mutableListOf<SensorPoint>()
 
