@@ -5,12 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import com.example.plyometrics.analysis.JumpDetector
 import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.exporter.CsvSessionSerializer
-import com.example.plyometrics.model.AccelerometerManager
+import com.example.plyometrics.model.MotionSensorManager
 import com.example.plyometrics.model.SensorPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -23,7 +21,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
 
     private var finishedSession: List<SensorPoint> = listOf()
 
-    private val manager = AccelerometerManager(application) { finishedSession ->
+    private val manager = MotionSensorManager(application) { finishedSession ->
         _isRunning.value = false
         this.finishedSession = finishedSession
         _jumpResult.value = jumpDetector.analyze(finishedSession)

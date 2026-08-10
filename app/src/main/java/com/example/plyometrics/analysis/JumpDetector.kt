@@ -27,8 +27,8 @@ class JumpDetector {
         val landing = findLanding(points, takeOff) ?: return null
 
         return JumpResult(
-            takeOffTime = takeOff.time,
-            landingTime = landing.time
+            takeOffTime = takeOff.timestamp,
+            landingTime = landing.timestamp
         )
     }
 

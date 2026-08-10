@@ -1,21 +1,16 @@
 package com.example.plyometrics.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class SensorPoint(
-    var timestamp: Long,
-    val acceleration: Acceleration,
+data class RotationSample(
+    val timestamp: Long,
     val rotationVector: FloatArray
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as SensorPoint
+        other as RotationSample
 
         if (timestamp != other.timestamp) return false
-        if (acceleration != other.acceleration) return false
         if (!rotationVector.contentEquals(other.rotationVector)) return false
 
         return true
@@ -23,7 +18,6 @@ data class SensorPoint(
 
     override fun hashCode(): Int {
         var result = timestamp.hashCode()
-        result = 31 * result + acceleration.hashCode()
         result = 31 * result + rotationVector.contentHashCode()
         return result
     }
