@@ -3,6 +3,9 @@ package com.example.plyometrics.model
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
+/**
+ * Acceleration vector measured by the phone accelerometer
+ */
 @Serializable
 data class Acceleration(
     val x: Float,

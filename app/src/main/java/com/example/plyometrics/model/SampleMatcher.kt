@@ -28,7 +28,7 @@ object SampleMatcher {
             SensorPoint(
                 timestamp = acceleration.timestamp,
                 acceleration = acceleration.acceleration,
-                rotationVector = closestRotation.rotationVector
+                rotation = closestRotation.rotation
             )
         }
 

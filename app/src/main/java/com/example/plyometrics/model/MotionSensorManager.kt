@@ -5,7 +5,6 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.util.Log
 
 class MotionSensorManager(
     context: Context,
@@ -49,19 +48,12 @@ class MotionSensorManager(
 
     fun stop() {
         sensorManager.unregisterListener(this)
-
-        val sensorPoints = SampleMatcher.match(
-            accelerationSamples,
-            rotationSamples
+        onSessionFinished(
+            SampleMatcher.match(
+                accelerationSamples,
+                rotationSamples
+            )
         )
-
-        val startTimestamp = sensorPoints.first().timestamp
-
-        sensorPoints.forEach {
-            it.timestamp = (it.timestamp - startTimestamp) / 1_000_000
-        }
-
-        onSessionFinished(sensorPoints)
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
