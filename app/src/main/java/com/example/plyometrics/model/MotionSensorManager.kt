@@ -78,9 +78,16 @@ class MotionSensorManager(
             Sensor.TYPE_ROTATION_VECTOR -> {
                 rotationSamples += RotationSample(
                     event.timestamp,
-                    event.values.clone()
+                    rotationFromEventValues(event.values)
                 )
             }
         }
+    }
+
+    private fun rotationFromEventValues(values: FloatArray): Rotation {
+        return Rotation(qx = values[0],
+            qy = values[1],
+            qz = values[2],
+            qw = values[3])
     }
 }
