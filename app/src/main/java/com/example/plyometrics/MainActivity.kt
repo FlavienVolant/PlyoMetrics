@@ -5,7 +5,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.plyometrics.ui.screen.SensorScreen
+import com.example.plyometrics.ui.screen.SessionsScreen
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
@@ -18,7 +34,59 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PlyoMetricsTheme {
-                SensorScreen(sensorViewModel)
+                AppNavigation(sensorViewModel)
+            }
+        }
+    }
+}
+
+@Composable
+fun AppNavigation(viewModel: SensorViewModel) {
+    val navController = rememberNavController()
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+
+    Scaffold(bottomBar = {
+        NavigationBar {
+            NavigationBarItem(
+                selected = currentRoute == "sensor",
+                onClick = {
+                    navController.navigate("sensor") {
+                        popUpTo("sensor"){
+                            inclusive = true
+                        }
+                    }
+                },
+                icon = {
+                    Icon(imageVector = Icons.Default.Home, contentDescription = "Accueil")
+                }
+            )
+
+            NavigationBarItem(
+                selected = currentRoute == "sessions",
+                onClick = {
+                    navController.navigate("sessions") {
+                        popUpTo("sensor")
+                    }
+                },
+                icon = {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "Sessions")
+                }
+            )
+        }
+    }) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "sensor",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("sensor") {
+                SensorScreen(viewModel)
+            }
+
+            composable("sessions") {
+                SessionsScreen(viewModel)
             }
         }
     }

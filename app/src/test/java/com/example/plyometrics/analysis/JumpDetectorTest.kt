@@ -19,7 +19,7 @@ class JumpDetectorTest {
     }
 
     private fun point(time: Long, magnitude: Double): SensorPoint =
-        SensorPoint(time, Acceleration(0f, 0f, magnitude.toFloat()), Rotation(0, 0, 0, 0))
+        SensorPoint(time * 1_000_000, Acceleration(0f, 0f, magnitude.toFloat()), Rotation(0f, 0f, 0f, 0f))
 
     @Test
     fun `findImpulse returns first peak`() {
@@ -35,7 +35,7 @@ class JumpDetectorTest {
         val impulse = detector.findImpulse(session)
 
         assertNotNull(impulse)
-        assertEquals(60L, impulse!!.timestamp)
+        assertEquals(60_000_000L, impulse!!.timestamp)
     }
 
     @Test
@@ -66,7 +66,7 @@ class JumpDetectorTest {
 
         val takeOff = detector.findTakeOff(session, impulse)
 
-        assertEquals(60L, takeOff!!.timestamp)
+        assertEquals(60_000_000L, takeOff!!.timestamp)
     }
 
     @Test
@@ -89,7 +89,7 @@ class JumpDetectorTest {
 
         val landing = detector.findLanding(session, takeOff)
 
-        assertEquals(120L, landing!!.timestamp)
+        assertEquals(120_000_000L, landing!!.timestamp)
     }
 
     @Test

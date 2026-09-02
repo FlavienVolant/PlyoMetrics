@@ -1,6 +1,5 @@
 package com.example.plyometrics.analysis
 
-import android.util.Log
 import com.example.plyometrics.model.SensorPoint
 
 class JumpDetector {
@@ -8,8 +7,6 @@ class JumpDetector {
     private val IMPULSE_THRESHOLD = 15f
     private val TAKE_OFF_THRESHOLD = 3f
     private val LANDING_THRESHOLD = 15f
-
-    private val frameTransformer = SensorFrameTransformer()
 
     /**
      * Return the jump of a sensor session
@@ -22,12 +19,6 @@ class JumpDetector {
      * Returns a [JumpResult] if all events are found, null otherwise
      */
     fun analyze(points: List<SensorPoint>): JumpResult? {
-
-        val worldPoints = frameTransformer.toWorldFrame(points)
-
-        val verticalAccelerations = worldPoints.map {
-            it.acceleration.z
-        }
 
         val impulse = findImpulse(points) ?: return null
 
