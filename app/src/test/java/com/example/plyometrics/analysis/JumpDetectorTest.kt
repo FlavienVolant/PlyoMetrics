@@ -1,6 +1,7 @@
 package com.example.plyometrics.analysis
 
 import com.example.plyometrics.model.Acceleration
+import com.example.plyometrics.model.Rotation
 import com.example.plyometrics.model.SensorPoint
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -18,7 +19,7 @@ class JumpDetectorTest {
     }
 
     private fun point(time: Long, magnitude: Double): SensorPoint =
-        SensorPoint(time, Acceleration(0f, 0f, magnitude.toFloat()), FloatArray(3))
+        SensorPoint(time, Acceleration(0f, 0f, magnitude.toFloat()), Rotation(0, 0, 0, 0))
 
     @Test
     fun `findImpulse returns first peak`() {

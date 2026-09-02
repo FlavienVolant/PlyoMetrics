@@ -1,6 +1,7 @@
 package com.example.plyometrics.analysis
 
 import com.example.plyometrics.model.Acceleration
+import com.example.plyometrics.model.Rotation
 import com.example.plyometrics.model.SensorPoint
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -18,7 +19,7 @@ class SensorFrameTransformerTest {
                 y = 2f,
                 z = 3f
             ),
-            rotationVector = floatArrayOf(
+            rotation = Rotation(
                 0f, 0f, 0f, 1f
             )
         )
@@ -39,7 +40,7 @@ class SensorFrameTransformerTest {
                 y = 0f,
                 z = 0f
             ),
-            rotationVector = floatArrayOf(
+            rotation = Rotation(
                 0f,
                 0f,
                 0.70710677f,
