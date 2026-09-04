@@ -18,7 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.plyometrics.model.JumpPoint
+import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.model.RawSensorPoint
+import com.example.plyometrics.model.measure.Acceleration
+import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.components.SessionItem
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
@@ -28,15 +31,11 @@ fun SessionsScreen(viewModel: SensorViewModel) {
 
     val sessions by viewModel.sessions.collectAsState()
 
-    SessionsScreen(
-        sessions = sessions
-    )
+    SessionsScreen(sessions)
 }
 
 @Composable
-fun SessionsScreen(
-    sessions: List<List<JumpPoint>>
-) {
+fun SessionsScreen(sessions: List<RawJump>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,10 +60,8 @@ fun SessionsScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                itemsIndexed(sessions) { _, session ->
-                    SessionItem(
-                        session = session
-                    )
+                itemsIndexed(sessions) { _, rawJump ->
+                    SessionItem(rawJump = rawJump)
                 }
             }
         }
@@ -75,26 +72,48 @@ fun SessionsScreen(
 @Composable
 fun SessionsScreenPreview() {
     PlyoMetricsTheme {
-        SessionsScreen(
-            sessions = previewSessions()
-        )
+        SessionsScreen(previewRawJumps())
     }
 }
 
-private fun previewSessions(): List<List<JumpPoint>> {
+private fun previewRawJumps(): List<RawJump> {
     return listOf(
-        List(100) { index ->
-            JumpPoint(
-                timestamp = index * 5_000_000L,
-                accelerationZ = 9.81f
-            )
-        },
+        RawJump(
+            points = List(100) { index ->
+                RawSensorPoint(
+                    timestamp = index * 5_000_000L,
+                    acceleration = Acceleration(
+                        x = 0f,
+                        y = 0f,
+                        z = 9.81f
+                    ),
+                    rotation = Rotation(
+                        qx = 0f,
+                        qy = 0f,
+                        qz = 0f,
+                        qw = 1f
+                    )
+                )
+            }
+        ),
 
-        List(250) { index ->
-            JumpPoint(
-                timestamp = index * 5_000_000L,
-                accelerationZ = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
-            )
-        }
+        RawJump(
+            points = List(250) { index ->
+                RawSensorPoint(
+                    timestamp = index * 5_000_000L,
+                    acceleration = Acceleration(
+                        x = 0f,
+                        y = 0f,
+                        z = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
+                    ),
+                    rotation = Rotation(
+                        qx = 0f,
+                        qy = 0f,
+                        qz = 0f,
+                        qw = 1f
+                    )
+                )
+            }
+        )
     )
 }

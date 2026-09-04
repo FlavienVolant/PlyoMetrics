@@ -11,16 +11,22 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.plyometrics.model.JumpPoint
+import com.example.plyometrics.analysis.SensorFrameTransformer
+import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.model.RawSensorPoint
+import com.example.plyometrics.model.measure.Acceleration
+import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 
 @Composable
-fun SessionItem(session: List<JumpPoint>) {
+fun SessionItem(rawJump: RawJump) {
 
     val graphColor = MaterialTheme.colorScheme.primary
     val gravityColor = MaterialTheme.colorScheme.secondary
     val axisColor = MaterialTheme.colorScheme.outline
     val zeroColor = MaterialTheme.colorScheme.outlineVariant
+
+    val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(rawJump.points)
 
     Canvas(
         modifier = Modifier
@@ -36,17 +42,17 @@ fun SessionItem(session: List<JumpPoint>) {
         val graphHeight = size.height - topPadding - bottomPadding
 
         // Temps en secondes
-        val minTime = session.first().timestamp / 1_000_000_000f
-        val maxTime = session.last().timestamp / 1_000_000_000f
+        val minTime = verticalAccelerationPoints.first().timestamp / 1_000_000_000f
+        val maxTime = verticalAccelerationPoints.last().timestamp / 1_000_000_000f
 
         // Accélérations
         val minAcceleration = minOf(
-            session.minOf { it.accelerationZ },
+            verticalAccelerationPoints.minOf { it.value },
             0f
         )
 
         val maxAcceleration = maxOf(
-            session.maxOf { it.accelerationZ },
+            verticalAccelerationPoints.maxOf { it.value },
             9.81f
         )
 
@@ -91,10 +97,10 @@ fun SessionItem(session: List<JumpPoint>) {
         // Courbe
         val path = Path()
 
-        session.forEachIndexed { index, point ->
+        verticalAccelerationPoints.forEachIndexed { index, point ->
 
             val px = x(point.timestamp)
-            val py = y(point.accelerationZ)
+            val py = y(point.value)
 
             if (index == 0) {
                 path.moveTo(px, py)
@@ -132,44 +138,57 @@ fun SessionItem(session: List<JumpPoint>) {
 fun SessionItemPreview() {
     PlyoMetricsTheme {
         SessionItem(
-            session = List(200) { index ->
+            rawJump = RawJump(
+                points = List(200) { index ->
 
-                val time = index * 5_000_000L // 5 ms
+                    val time = index * 5_000_000L // 5 ms
 
-                val acceleration = when (index) {
-                    in 0..39 -> {
-                        9.81f
+                    val acceleration = when (index) {
+                        in 0..39 -> {
+                            9.81f
+                        }
+
+                        in 40..59 -> {
+                            9.81f + (index - 40) * 0.8f
+                        }
+
+                        in 60..69 -> {
+                            25.8f - (index - 60) * 1.6f
+                        }
+
+                        in 70..119 -> {
+                            0.2f
+                        }
+
+                        in 120..129 -> {
+                            0.2f + (index - 120) * 2.5f
+                        }
+
+                        in 130..159 -> {
+                            22f - (index - 130) * 0.4f
+                        }
+
+                        else -> {
+                            9.81f
+                        }
                     }
 
-                    in 40..59 -> {
-                        9.81f + (index - 40) * 0.8f
-                    }
-
-                    in 60..69 -> {
-                        25.8f - (index - 60) * 1.6f
-                    }
-
-                    in 70..119 -> {
-                        0.2f
-                    }
-
-                    in 120..129 -> {
-                        0.2f + (index - 120) * 2.5f
-                    }
-
-                    in 130..159 -> {
-                        22f - (index - 130) * 0.4f
-                    }
-                    else -> {
-                        9.81f
-                    }
+                    RawSensorPoint(
+                        timestamp = time,
+                        acceleration = Acceleration(
+                            x = 0f,
+                            y = 0f,
+                            z = acceleration
+                        ),
+                        rotation = Rotation(
+                            qx = 0f,
+                            qy = 0f,
+                            qz = 0f,
+                            qw = 1f
+                        )
+                    )
                 }
-
-                JumpPoint(
-                    timestamp = time,
-                    accelerationZ = acceleration
-                )
-            }
+            )
         )
     }
 }

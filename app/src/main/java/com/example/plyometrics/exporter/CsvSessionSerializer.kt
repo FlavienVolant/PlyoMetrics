@@ -1,9 +1,9 @@
 package com.example.plyometrics.exporter
 
-import com.example.plyometrics.model.SensorPoint
+import com.example.plyometrics.model.RawSensorPoint
 
 class CsvSessionSerializer : SessionSerializer {
-    override fun serialize(session: List<SensorPoint>): String =
+    override fun serialize(session: List<RawSensorPoint>): String =
         buildString {
             appendLine("timestamp, x, y, z, rx, ry, rz, rw")
             for (point in session) {
@@ -20,7 +20,7 @@ class CsvSessionSerializer : SessionSerializer {
             }
         }
 
-    override fun deserialize(data: String): List<SensorPoint> {
+    override fun deserialize(data: String): List<RawSensorPoint> {
         TODO("Not yet implemented")
     }
 }
