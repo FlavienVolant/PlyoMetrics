@@ -4,11 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.example.plyometrics.analysis.JumpDetector
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.analysis.SensorFrameTransformer
 import com.example.plyometrics.exporter.CsvSessionSerializer
-import com.example.plyometrics.model.JumpPoint
 import com.example.plyometrics.model.MotionSensorManager
-import com.example.plyometrics.model.SensorPoint
+import com.example.plyometrics.model.RawJump
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -21,28 +19,18 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     private val _jumpResult = MutableStateFlow<JumpResult?>(null)
     val jumpResult = _jumpResult.asStateFlow()
 
-    private val _sessions =
-        MutableStateFlow<List<List<JumpPoint>>>(emptyList())
+    private val _sessions = MutableStateFlow<List<RawJump>>(emptyList())
     val sessions = _sessions.asStateFlow()
 
-    private var finishedSession: List<SensorPoint> = listOf()
+    private var _selectedJump = MutableStateFlow<RawJump?>(null)
+    val selectedJump = _selectedJump.asStateFlow()
 
     private val manager = MotionSensorManager(application) { finishedSession ->
         _isRunning.value = false
-        this.finishedSession = finishedSession
 
         _jumpResult.value = jumpDetector.analyze(finishedSession)
 
-        val worldPoints = SensorFrameTransformer().toWorldFrame(finishedSession)
-
-        val jumpPoints = worldPoints.map {
-            JumpPoint(
-                it.timestamp,
-                it.acceleration.z
-            )
-        }
-
-        _sessions.value += listOf(jumpPoints)
+        _sessions.value += listOf(RawJump(points = finishedSession))
     }
 
     fun start() {
@@ -55,5 +43,11 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         manager.stop()
     }
 
-    fun exportSession() = CsvSessionSerializer().serialize(finishedSession)
+    fun selectedJump(rawJump: RawJump) {
+        _selectedJump.value = rawJump
+    }
+
+    @Deprecated("Use exportSessions(RawJump)")
+    fun exportSession() = "{}"
+    fun exportSession(rawJump: RawJump) = CsvSessionSerializer().serialize(rawJump.points)
 }

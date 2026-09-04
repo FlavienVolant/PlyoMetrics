@@ -1,6 +1,6 @@
 package com.example.plyometrics.analysis
 
-import com.example.plyometrics.model.SensorPoint
+import com.example.plyometrics.model.RawSensorPoint
 
 class JumpDetector {
 
@@ -18,7 +18,7 @@ class JumpDetector {
      *
      * Returns a [JumpResult] if all events are found, null otherwise
      */
-    fun analyze(points: List<SensorPoint>): JumpResult? {
+    fun analyze(points: List<RawSensorPoint>): JumpResult? {
 
         val impulse = findImpulse(points) ?: return null
 
@@ -33,13 +33,13 @@ class JumpDetector {
     }
 
     /**
-     * Finds the [SensorPoint] corresponding to the impulse of the jump
+     * Finds the [RawSensorPoint] corresponding to the impulse of the jump
      *
      * The impulse is the first acceleration peak
      *
      * Returns null if no impulse is found
      */
-    fun findImpulse(points: List<SensorPoint>): SensorPoint? {
+    fun findImpulse(points: List<RawSensorPoint>): RawSensorPoint? {
 
         for (i in 1 until points.size - 1) {
 
@@ -61,14 +61,14 @@ class JumpDetector {
     }
 
     /**
-     * Finds the [SensorPoint] corresponding to the take-off of the jump
+     * Finds the [RawSensorPoint] corresponding to the take-off of the jump
      *
      * The search starts after the impulse, the take-off is detected when the
      * acceleration becomes close to zero
      *
      * Returns null if no take-off is found
      */
-    fun findTakeOff(points: List<SensorPoint>, impulse: SensorPoint): SensorPoint? {
+    fun findTakeOff(points: List<RawSensorPoint>, impulse: RawSensorPoint): RawSensorPoint? {
 
         val startIndex = points.indexOf(impulse)
 
@@ -87,21 +87,21 @@ class JumpDetector {
     }
 
     /**
-     * Finds the [SensorPoint] corresponding to the landing of the jump
+     * Finds the [RawSensorPoint] corresponding to the landing of the jump
      *
      * The search starts after the take-off, the landing is detected as the
      * first acceleration peak
      *
      * Returns null if no landing is found
      */
-    fun findLanding(points: List<SensorPoint>, takeOff: SensorPoint): SensorPoint? {
+    fun findLanding(points: List<RawSensorPoint>, takeOff: RawSensorPoint): RawSensorPoint? {
 
         val startIndex = points.indexOf(takeOff)
 
         if (startIndex == -1)
             return null
 
-        var highest: SensorPoint? = null
+        var highest: RawSensorPoint? = null
 
         for (i in startIndex until points.size) {
 

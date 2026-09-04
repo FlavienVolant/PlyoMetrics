@@ -5,10 +5,14 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import com.example.plyometrics.model.measure.Acceleration
+import com.example.plyometrics.model.measure.RawAccelerationSample
+import com.example.plyometrics.model.measure.RawRotationSample
+import com.example.plyometrics.model.measure.Rotation
 
 class MotionSensorManager(
     context: Context,
-    private val onSessionFinished: (List<SensorPoint>) -> Unit
+    private val onSessionFinished: (List<RawSensorPoint>) -> Unit
 ) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -22,9 +26,9 @@ class MotionSensorManager(
     private val rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         ?: sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
 
-    private val accelerationSamples = mutableListOf<AccelerationSample>()
+    private val accelerationSamples = mutableListOf<RawAccelerationSample>()
 
-    private val rotationSamples = mutableListOf<RotationSample>()
+    private val rotationSamples = mutableListOf<RawRotationSample>()
 
     private var startTimestamp = 0L
 
@@ -64,7 +68,7 @@ class MotionSensorManager(
         when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
 
-                accelerationSamples += AccelerationSample(
+                accelerationSamples += RawAccelerationSample(
                     event.timestamp,
                     Acceleration(
                         event.values[0],
@@ -76,7 +80,7 @@ class MotionSensorManager(
 
             Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR,
             Sensor.TYPE_ROTATION_VECTOR -> {
-                rotationSamples += RotationSample(
+                rotationSamples += RawRotationSample(
                     event.timestamp,
                     rotationFromEventValues(event.values)
                 )
@@ -85,9 +89,11 @@ class MotionSensorManager(
     }
 
     private fun rotationFromEventValues(values: FloatArray): Rotation {
-        return Rotation(qx = values[0],
+        return Rotation(
+            qx = values[0],
             qy = values[1],
             qz = values[2],
-            qw = values[3])
+            qw = values[3]
+        )
     }
 }

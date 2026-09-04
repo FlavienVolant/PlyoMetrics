@@ -1,9 +1,9 @@
-package com.example.plyometrics.model
+package com.example.plyometrics.model.measure
 
 /**
  * An acceleration with its timestamp
  */
-data class AccelerationSample(
+data class RawAccelerationSample(
     val timestamp: Long,
     val acceleration: Acceleration
 )

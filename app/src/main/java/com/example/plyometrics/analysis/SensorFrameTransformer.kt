@@ -1,20 +1,18 @@
 package com.example.plyometrics.analysis
 
-import com.example.plyometrics.model.Acceleration
-import com.example.plyometrics.model.Rotation
-import com.example.plyometrics.model.SensorPoint
+import com.example.plyometrics.model.RawSensorPoint
+import com.example.plyometrics.model.measure.Acceleration
+import com.example.plyometrics.model.measure.Rotation
 
 class SensorFrameTransformer {
-    fun toWorldFrame(point: SensorPoint): SensorPoint {
-        return point.copy(
-            acceleration = transformAcceleration(
-                point.acceleration,
-                point.rotation
-            )
+    fun toWorldFrame(rawPoint: RawSensorPoint): VerticalAccelerationPoint {
+        return VerticalAccelerationPoint(
+            timestamp = rawPoint.timestamp,
+            value = transformAcceleration(rawPoint.acceleration, rawPoint.rotation).z // only take z
         )
     }
 
-    fun toWorldFrame(points: List<SensorPoint>): List<SensorPoint> = points.map(::toWorldFrame)
+    fun toWorldFrame(points: List<RawSensorPoint>): List<VerticalAccelerationPoint> = points.map(::toWorldFrame)
 
     private fun transformAcceleration(
         acceleration: Acceleration,

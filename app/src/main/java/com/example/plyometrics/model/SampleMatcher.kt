@@ -1,19 +1,21 @@
 package com.example.plyometrics.model
 
+import com.example.plyometrics.model.measure.RawAccelerationSample
+import com.example.plyometrics.model.measure.RawRotationSample
 import kotlin.math.abs
 
 object SampleMatcher {
 
     /**
-     * For each acceleration, find the rotation sample
+     * For each rawAccelerationSample, find the rawRotationSample
      * with the closest timestamp.
      *
      * O(n * m)
      */
     fun match(
-        accelerations: List<AccelerationSample>,
-        rotations: List<RotationSample>
-    ): List<SensorPoint> {
+        accelerations: List<RawAccelerationSample>,
+        rotations: List<RawRotationSample>
+    ): List<RawSensorPoint> {
 
         val sensorPoints = accelerations.mapNotNull { acceleration ->
 
@@ -25,7 +27,7 @@ object SampleMatcher {
                 return@mapNotNull null
             }
 
-            SensorPoint(
+            RawSensorPoint(
                 timestamp = acceleration.timestamp,
                 acceleration = acceleration.acceleration,
                 rotation = closestRotation.rotation

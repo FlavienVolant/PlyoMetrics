@@ -1,4 +1,4 @@
-package com.example.plyometrics.model
+package com.example.plyometrics.model.measure
 
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
