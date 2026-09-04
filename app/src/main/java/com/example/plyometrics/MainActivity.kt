@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,8 +21,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.plyometrics.ui.screen.SensorScreen
-import com.example.plyometrics.ui.screen.SessionsScreen
+import com.example.plyometrics.ui.screen.JumpDetailsScreen
+import com.example.plyometrics.ui.screen.RecordScreen
+import com.example.plyometrics.ui.screen.JumpsScreen
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
@@ -47,46 +49,79 @@ fun AppNavigation(viewModel: SensorViewModel) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    Scaffold(bottomBar = {
-        NavigationBar {
-            NavigationBarItem(
-                selected = currentRoute == "sensor",
-                onClick = {
-                    navController.navigate("sensor") {
-                        popUpTo("sensor"){
-                            inclusive = true
-                        }
-                    }
-                },
-                icon = {
-                    Icon(imageVector = Icons.Default.Home, contentDescription = "Accueil")
-                }
-            )
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
 
-            NavigationBarItem(
-                selected = currentRoute == "sessions",
-                onClick = {
-                    navController.navigate("sessions") {
-                        popUpTo("sensor")
+                NavigationBarItem(
+                    selected = currentRoute == "record",
+                    onClick = {
+                        navController.navigate("record") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Record"
+                        )
+                    },
+                    label = {
+                        Text("Record")
                     }
-                },
-                icon = {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "Sessions")
-                }
-            )
+                )
+
+                NavigationBarItem(
+                    selected = currentRoute == "jumps",
+                    onClick = {
+                        navController.navigate("jumps") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Jumps"
+                        )
+                    },
+                    label = {
+                        Text("Jumps")
+                    }
+                )
+            }
         }
-    }) { innerPadding ->
+    ) { innerPadding ->
+
         NavHost(
             navController = navController,
-            startDestination = "sensor",
+            startDestination = "record",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("sensor") {
-                SensorScreen(viewModel)
+
+            composable("record") {
+                RecordScreen(viewModel)
             }
 
-            composable("sessions") {
-                SessionsScreen(viewModel)
+            composable("jumps") {
+                JumpsScreen(
+                    viewModel,
+                    onJumpClicked = { rawJump ->
+                        viewModel.selectedJump(rawJump)
+                        navController.navigate("details")
+                    }
+                )
+            }
+
+            composable("details") {
+                JumpDetailsScreen(viewModel)
             }
         }
     }

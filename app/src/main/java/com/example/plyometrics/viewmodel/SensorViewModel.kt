@@ -22,16 +22,15 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     private val _sessions = MutableStateFlow<List<RawJump>>(emptyList())
     val sessions = _sessions.asStateFlow()
 
-    private lateinit var finishedRawJump: RawJump
+    private var _selectedJump = MutableStateFlow<RawJump?>(null)
+    val selectedJump = _selectedJump.asStateFlow()
 
     private val manager = MotionSensorManager(application) { finishedSession ->
         _isRunning.value = false
 
-        this.finishedRawJump = RawJump(points = finishedSession)
-
         _jumpResult.value = jumpDetector.analyze(finishedSession)
 
-        _sessions.value += listOf(this.finishedRawJump)
+        _sessions.value += listOf(RawJump(points = finishedSession))
     }
 
     fun start() {
@@ -44,5 +43,11 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         manager.stop()
     }
 
-    fun exportSession() = CsvSessionSerializer().serialize(finishedRawJump.points)
+    fun selectedJump(rawJump: RawJump) {
+        _selectedJump.value = rawJump
+    }
+
+    @Deprecated("Use exportSessions(RawJump)")
+    fun exportSession() = "{}"
+    fun exportSession(rawJump: RawJump) = CsvSessionSerializer().serialize(rawJump.points)
 }

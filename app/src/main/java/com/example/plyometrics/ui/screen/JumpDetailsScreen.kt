@@ -1,10 +1,16 @@
-package com.example.plyometrics.ui.components
+package com.example.plyometrics.ui.screen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -17,9 +23,35 @@ import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
+import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
-fun SessionItem(rawJump: RawJump) {
+fun JumpDetailsScreen(
+    viewModel: SensorViewModel,
+    modifier: Modifier = Modifier
+) {
+    val rawJump by viewModel.selectedJump.collectAsState()
+
+    if (rawJump != null) {
+        JumpDetailsScreen(
+            rawJump = rawJump!!,
+            modifier = modifier
+        )
+    } else {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No jump selected",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun JumpDetailsScreen(rawJump: RawJump, modifier: Modifier = Modifier) {
 
     val graphColor = MaterialTheme.colorScheme.primary
     val gravityColor = MaterialTheme.colorScheme.secondary
@@ -29,7 +61,7 @@ fun SessionItem(rawJump: RawJump) {
     val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(rawJump.points)
 
     Canvas(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(250.dp)
     ) {
@@ -94,7 +126,7 @@ fun SessionItem(rawJump: RawJump) {
             strokeWidth = 1f
         )
 
-        // Courbe
+        // draw path
         val path = Path()
 
         verticalAccelerationPoints.forEachIndexed { index, point ->
@@ -131,54 +163,22 @@ fun SessionItem(rawJump: RawJump) {
             strokeWidth = 2f
         )
     }
+
 }
 
 @Preview(showBackground = true)
 @Composable
-fun SessionItemPreview() {
+fun JumpDetailsScreenPreview() {
     PlyoMetricsTheme {
-        SessionItem(
-            rawJump = RawJump(
-                points = List(200) { index ->
-
-                    val time = index * 5_000_000L // 5 ms
-
-                    val acceleration = when (index) {
-                        in 0..39 -> {
-                            9.81f
-                        }
-
-                        in 40..59 -> {
-                            9.81f + (index - 40) * 0.8f
-                        }
-
-                        in 60..69 -> {
-                            25.8f - (index - 60) * 1.6f
-                        }
-
-                        in 70..119 -> {
-                            0.2f
-                        }
-
-                        in 120..129 -> {
-                            0.2f + (index - 120) * 2.5f
-                        }
-
-                        in 130..159 -> {
-                            22f - (index - 130) * 0.4f
-                        }
-
-                        else -> {
-                            9.81f
-                        }
-                    }
-
+        JumpDetailsScreen(
+            RawJump(
+                points = List(250) { index ->
                     RawSensorPoint(
-                        timestamp = time,
+                        timestamp = index * 5_000_000L,
                         acceleration = Acceleration(
                             x = 0f,
                             y = 0f,
-                            z = acceleration
+                            z = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
                         ),
                         rotation = Rotation(
                             qx = 0f,

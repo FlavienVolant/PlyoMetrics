@@ -1,5 +1,6 @@
 package com.example.plyometrics.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,20 +23,20 @@ import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
-import com.example.plyometrics.ui.components.SessionItem
+import com.example.plyometrics.ui.components.JumpItem
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
-fun SessionsScreen(viewModel: SensorViewModel) {
+fun JumpsScreen(viewModel: SensorViewModel, onJumpClicked: (RawJump) -> Unit = {}) {
 
     val sessions by viewModel.sessions.collectAsState()
 
-    SessionsScreen(sessions)
+    JumpsScreen(sessions, onJumpClicked)
 }
 
 @Composable
-fun SessionsScreen(sessions: List<RawJump>) {
+fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +62,12 @@ fun SessionsScreen(sessions: List<RawJump>) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 itemsIndexed(sessions) { _, rawJump ->
-                    SessionItem(rawJump = rawJump)
+                    JumpItem(
+                        rawJump = rawJump,
+                        modifier = Modifier.clickable{
+                            onJumpClicked(rawJump)
+                        }
+                    )
                 }
             }
         }
@@ -72,7 +78,7 @@ fun SessionsScreen(sessions: List<RawJump>) {
 @Composable
 fun SessionsScreenPreview() {
     PlyoMetricsTheme {
-        SessionsScreen(previewRawJumps())
+        JumpsScreen(previewRawJumps())
     }
 }
 

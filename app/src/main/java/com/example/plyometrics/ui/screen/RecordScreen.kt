@@ -26,13 +26,13 @@ import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
-fun SensorScreen(viewModel: SensorViewModel) {
+fun RecordScreen(viewModel: SensorViewModel) {
     val context = LocalContext.current
 
     val isRunning by viewModel.isRunning.collectAsState()
     val result by viewModel.jumpResult.collectAsState()
 
-    SensorScreen(
+    RecordScreen(
         isRunning = isRunning,
         result = result,
         onStartStop = {
@@ -61,7 +61,7 @@ fun SensorScreen(viewModel: SensorViewModel) {
 }
 
 @Composable
-private fun SensorScreen(
+private fun RecordScreen(
     isRunning: Boolean,
     result: JumpResult?,
     onStartStop: () -> Unit,
@@ -98,7 +98,7 @@ private fun SensorScreen(
 @Composable
 private fun SensorScreenReadyNotRunningPreview() {
     PlyoMetricsTheme {
-        SensorScreen(
+        RecordScreen(
             isRunning = false,
             result = null,
             onStartStop = {},
@@ -111,7 +111,7 @@ private fun SensorScreenReadyNotRunningPreview() {
 @Composable
 private fun SensorScreenReadyRunningPreview() {
     PlyoMetricsTheme {
-        SensorScreen(
+        RecordScreen(
             isRunning = true,
             result = null,
             onStartStop = {},
@@ -124,7 +124,7 @@ private fun SensorScreenReadyRunningPreview() {
 @Composable
 private fun SensorScreenReadyWithResultPreview() {
     PlyoMetricsTheme {
-        SensorScreen(
+        RecordScreen(
             isRunning = false,
             result = JumpResult(
                 takeOffTime = 0,
