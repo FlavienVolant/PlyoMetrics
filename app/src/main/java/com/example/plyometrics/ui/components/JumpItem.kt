@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.JumpDetector
@@ -19,12 +21,20 @@ import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
-fun JumpItem(rawJump: RawJump, modifier: Modifier = Modifier) {
-
+fun JumpItem(
+    rawJump: RawJump,
+    modifier: Modifier = Modifier
+) {
     val jumpResult = JumpDetector().analyze(rawJump.points)
+
+    val configuration = LocalConfiguration.current
+    val locale = configuration.locales[0]
+
+    val dateFormatter = remember(locale) {
+        SimpleDateFormat("dd/MM/yyyy HH:mm", locale)
+    }
 
     Row(
         modifier = modifier
@@ -38,13 +48,19 @@ fun JumpItem(rawJump: RawJump, modifier: Modifier = Modifier) {
     ) {
         Column {
             Text(
-                text = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(rawJump.date),
+                text = dateFormatter.format(rawJump.date),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
 
         Text(
-            text = String.format(Locale.getDefault(), "%.2f m",jumpResult?.height),
+            text = jumpResult?.let {
+                String.format(
+                    locale,
+                    "%.2f m",
+                    it.height
+                )
+            } ?: "Jump not detected",
             style = MaterialTheme.typography.titleMedium
         )
     }
