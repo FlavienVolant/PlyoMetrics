@@ -1,8 +1,8 @@
 package com.example.plyometrics.analysis
 
+import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
-import com.example.plyometrics.model.RawSensorPoint
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull

@@ -1,134 +1,56 @@
 package com.example.plyometrics.ui.components
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.plyometrics.analysis.SensorFrameTransformer
+import com.example.plyometrics.analysis.JumpDetector
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun JumpItem(rawJump: RawJump, modifier: Modifier = Modifier) {
 
-    val graphColor = MaterialTheme.colorScheme.primary
-    val gravityColor = MaterialTheme.colorScheme.secondary
-    val axisColor = MaterialTheme.colorScheme.outline
-    val zeroColor = MaterialTheme.colorScheme.outlineVariant
+    val jumpResult = JumpDetector().analyze(rawJump.points)
 
-    val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(rawJump.points)
-
-    Canvas(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(250.dp)
+            .padding(
+                vertical = 12.dp,
+                horizontal = 16.dp
+            ),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        val leftPadding = 50f
-        val rightPadding = 20f
-        val topPadding = 20f
-        val bottomPadding = 30f
+        Column {
+            Text(
+                text = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(rawJump.date),
+                style = MaterialTheme.typography.bodyLarge
+            )
 
-        val graphWidth = size.width - leftPadding - rightPadding
-        val graphHeight = size.height - topPadding - bottomPadding
-
-        // Temps en secondes
-        val minTime = verticalAccelerationPoints.first().timestamp / 1_000_000_000f
-        val maxTime = verticalAccelerationPoints.last().timestamp / 1_000_000_000f
-
-        // Accélérations
-        val minAcceleration = minOf(
-            verticalAccelerationPoints.minOf { it.value },
-            0f
-        )
-
-        val maxAcceleration = maxOf(
-            verticalAccelerationPoints.maxOf { it.value },
-            9.81f
-        )
-
-        val timeRange = (maxTime - minTime).coerceAtLeast(0.001f)
-        val accelerationRange =
-            (maxAcceleration - minAcceleration).coerceAtLeast(0.001f)
-
-        fun x(timestamp: Long): Float {
-            val time = timestamp / 1_000_000_000f
-
-            return leftPadding +
-                    ((time - minTime) / timeRange) * graphWidth
+            Text(
+                text = "Jump",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
 
-        fun y(acceleration: Float): Float {
-            return topPadding +
-                    graphHeight -
-                    ((acceleration - minAcceleration) /
-                            accelerationRange) * graphHeight
-        }
-
-        // Ligne g
-        val gravityY = y(9.81f)
-
-        drawLine(
-            color = gravityColor,
-            start = Offset(leftPadding, gravityY),
-            end = Offset(size.width - rightPadding, gravityY),
-            strokeWidth = 1f
-        )
-
-        // Ligne zéro
-        val zeroY = y(0f)
-
-        drawLine(
-            color = zeroColor,
-            start = Offset(leftPadding, zeroY),
-            end = Offset(size.width - rightPadding, zeroY),
-            strokeWidth = 1f
-        )
-
-        // Courbe
-        val path = Path()
-
-        verticalAccelerationPoints.forEachIndexed { index, point ->
-
-            val px = x(point.timestamp)
-            val py = y(point.value)
-
-            if (index == 0) {
-                path.moveTo(px, py)
-            } else {
-                path.lineTo(px, py)
-            }
-        }
-
-        drawPath(
-            color = graphColor,
-            path = path,
-            style = Stroke(width = 3f)
-        )
-
-        // Axe X
-        drawLine(
-            color = axisColor,
-            start = Offset(leftPadding, topPadding + graphHeight),
-            end = Offset(size.width - rightPadding, topPadding + graphHeight),
-            strokeWidth = 2f
-        )
-
-        // Axe Y
-        drawLine(
-            color = axisColor,
-            start = Offset(leftPadding, topPadding),
-            end = Offset(leftPadding, topPadding + graphHeight),
-            strokeWidth = 2f
+        Text(
+            text = String.format(Locale.getDefault(), "%.2f m",jumpResult?.height),
+            style = MaterialTheme.typography.titleMedium
         )
     }
 }

@@ -22,8 +22,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.plyometrics.ui.screen.JumpDetailsScreen
-import com.example.plyometrics.ui.screen.RecordScreen
 import com.example.plyometrics.ui.screen.JumpsScreen
+import com.example.plyometrics.ui.screen.RecordScreen
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 

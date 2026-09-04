@@ -43,7 +43,7 @@ fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) 
             .padding(16.dp)
     ) {
         Text(
-            text = "Sessions",
+            text = "Jumps",
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -54,7 +54,7 @@ fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) 
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No session register")
+                Text("No jumps register")
             }
         } else {
             LazyColumn(
