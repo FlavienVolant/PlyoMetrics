@@ -41,11 +41,6 @@ fun JumpItem(rawJump: RawJump, modifier: Modifier = Modifier) {
                 text = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(rawJump.date),
                 style = MaterialTheme.typography.bodyLarge
             )
-
-            Text(
-                text = "Jump",
-                style = MaterialTheme.typography.bodySmall
-            )
         }
 
         Text(
