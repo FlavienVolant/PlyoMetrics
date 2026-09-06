@@ -1,5 +1,8 @@
 package com.example.plyometrics.ui.screen
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.JumpDetector
@@ -31,15 +36,29 @@ import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
-fun JumpDetailsScreen(
-    viewModel: SensorViewModel,
-    modifier: Modifier = Modifier
-) {
+fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier) {
     val rawJump by viewModel.selectedJump.collectAsState()
+    val context = LocalContext.current
 
     if (rawJump != null) {
         JumpDetailsScreen(
             rawJump = rawJump!!,
+            onExport = { rawJump: RawJump ->
+                val json = viewModel.exportSession(rawJump)
+
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_TEXT, json)
+                }
+
+                try {
+                    context.startActivity(
+                        Intent.createChooser(intent, "Export Session")
+                    )
+                } catch (e: ActivityNotFoundException) {
+                    Log.e("JumpDetailsScreen", e.toString())
+                }
+            },
             modifier = modifier
         )
     } else {
@@ -56,7 +75,7 @@ fun JumpDetailsScreen(
 }
 
 @Composable
-fun JumpDetailsScreen(rawJump: RawJump, modifier: Modifier = Modifier) {
+fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: Modifier = Modifier) {
 
     val graphColor = MaterialTheme.colorScheme.primary
     val gravityColor = MaterialTheme.colorScheme.secondary
@@ -66,9 +85,7 @@ fun JumpDetailsScreen(rawJump: RawJump, modifier: Modifier = Modifier) {
     val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(rawJump.points)
     val jumpResult = JumpDetector().analyze(rawJump.points)
 
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
 
         Canvas(
             modifier = modifier
@@ -256,6 +273,17 @@ fun JumpDetailsScreen(rawJump: RawJump, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {onExport(rawJump)},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text("Export Jump")
+        }
     }
 }
 
@@ -314,7 +342,8 @@ fun JumpDetailsScreenPreview() {
                         )
                     )
                 }
-            )
+            ),
+            onExport = {}
         )
     }
 }
