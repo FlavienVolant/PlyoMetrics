@@ -2,11 +2,15 @@ package com.example.plyometrics.analysis
 
 import com.example.plyometrics.model.RawSensorPoint
 
-class JumpDetector {
+class JumpDetector (
+    private val impulseThreshold: Float = 13f,
+    private val takeOffThreshold: Float = 5f,
+    private val landingThreshold: Float = 13f,
+    private val peakConfirmationPoints: Int = 10
+)
 
-    private val IMPULSE_THRESHOLD = 15f
-    private val TAKE_OFF_THRESHOLD = 3f
-    private val LANDING_THRESHOLD = 15f
+{
+    private val transformer = SensorFrameTransformer()
 
     /**
      * Return the jump of a sensor session
@@ -20,101 +24,97 @@ class JumpDetector {
      */
     fun analyze(points: List<RawSensorPoint>): JumpResult? {
 
+        if (points.isEmpty())
+            return null
+
+        return analyzeVerticalPoints(transformer.toWorldFrame(points))
+    }
+
+    fun analyzeVerticalPoints(points: List<VerticalAccelerationPoint>): JumpResult? {
         val impulse = findImpulse(points) ?: return null
-
         val takeOff = findTakeOff(points, impulse) ?: return null
-
         val landing = findLanding(points, takeOff) ?: return null
 
-        return JumpResult(
-            takeOffTime = takeOff.timestamp / 1_000_000,
-            landingTime = landing.timestamp / 1_000_000
-        )
+        return JumpResult(takeOff.timestamp, landing.timestamp)
     }
 
     /**
-     * Finds the [RawSensorPoint] corresponding to the impulse of the jump
-     *
-     * The impulse is the first acceleration peak
-     *
-     * Returns null if no impulse is found
+     * Find the first local maximum above IMPULSE_THRESHOLD
      */
-    fun findImpulse(points: List<RawSensorPoint>): RawSensorPoint? {
-
-        for (i in 1 until points.size - 1) {
-
-            val previous = points[i - 1]
+    fun findImpulse(points: List<VerticalAccelerationPoint>): VerticalAccelerationPoint? {
+        for(i in 0 .. points.size - peakConfirmationPoints) {
             val current = points[i]
-            val next = points[i + 1]
 
-            val currentValue = current.acceleration.magnitude
+            if(current.value < impulseThreshold)
+                continue
 
-            if (currentValue > IMPULSE_THRESHOLD &&
-                currentValue > previous.acceleration.magnitude &&
-                currentValue > next.acceleration.magnitude
-            ) {
-                return current
+            // confirm that the signal decreases after the peak
+            var isPeak = true
+            for(j in 1..peakConfirmationPoints) {
+                if (points[i + j].value >= current.value){
+                    isPeak = false
+                    break
+                }
             }
+
+            if(!isPeak)
+                continue
+
+            return current
         }
 
         return null
     }
 
-    /**
-     * Finds the [RawSensorPoint] corresponding to the take-off of the jump
-     *
-     * The search starts after the impulse, the take-off is detected when the
-     * acceleration becomes close to zero
-     *
-     * Returns null if no take-off is found
-     */
-    fun findTakeOff(points: List<RawSensorPoint>, impulse: RawSensorPoint): RawSensorPoint? {
+    fun findTakeOff(points: List<VerticalAccelerationPoint>, impulse: VerticalAccelerationPoint): VerticalAccelerationPoint? {
+        val impulseIndex = points.indexOfFirst { it.timestamp == impulse.timestamp }
 
-        val startIndex = points.indexOf(impulse)
-
-        if (startIndex == -1)
+        if (impulseIndex < 0)
             return null
 
-        for (i in startIndex until points.size) {
+        return points
+            .drop(impulseIndex + 1)
+            .firstOrNull{ it.value < takeOffThreshold }
+    }
 
-            val point = points[i]
+    fun findLanding(points: List<VerticalAccelerationPoint>, takeOff: VerticalAccelerationPoint): VerticalAccelerationPoint? {
+        val takeOffIndex = points.indexOfFirst { it.timestamp == takeOff.timestamp }
 
-            if (point.acceleration.magnitude < TAKE_OFF_THRESHOLD)
-                return point
+        if (takeOffIndex < 0)
+            return null
+
+        for(i in takeOffIndex + 1 until points.size - peakConfirmationPoints) {
+            val current = points[i]
+
+            if(current.value < landingThreshold)
+                continue
+
+            var isPeak = true
+
+            for(j in 1..peakConfirmationPoints) {
+                if (points[i + j].value >= current.value) {
+                    isPeak = false
+                    break
+                }
+            }
+
+            if(!isPeak)
+                continue
+
+            /*
+             * We found the landing peak.
+             *
+             * Now walk backwards through the increasing slope
+             * to find where this rise started.
+             */
+            var j = i - 1
+
+            while (points[j].value > takeOffThreshold)
+                j --
+
+            return points[j]
         }
 
         return null
-    }
-
-    /**
-     * Finds the [RawSensorPoint] corresponding to the landing of the jump
-     *
-     * The search starts after the take-off, the landing is detected as the
-     * first acceleration peak
-     *
-     * Returns null if no landing is found
-     */
-    fun findLanding(points: List<RawSensorPoint>, takeOff: RawSensorPoint): RawSensorPoint? {
-
-        val startIndex = points.indexOf(takeOff)
-
-        if (startIndex == -1)
-            return null
-
-        var highest: RawSensorPoint? = null
-
-        for (i in startIndex until points.size) {
-
-            val point = points[i]
-            val value = point.acceleration.magnitude
-
-            if (value > LANDING_THRESHOLD &&
-                (highest == null || value > highest.acceleration.magnitude)
-            ) {
-                highest = point
-            }
-        }
-
-        return highest
     }
 }

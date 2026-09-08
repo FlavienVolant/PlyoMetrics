@@ -105,9 +105,12 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
             val graphWidth = size.width - leftPadding - rightPadding
             val graphHeight = size.height - topPadding - bottomPadding
 
-            // Time in s
-            val minTime = verticalAccelerationPoints.first().timestamp / 1_000_000_000f
-            val maxTime = verticalAccelerationPoints.last().timestamp / 1_000_000_000f
+            // Time in seconds
+            val minTime =
+                verticalAccelerationPoints.first().timestamp / 1_000_000_000f
+
+            val maxTime =
+                verticalAccelerationPoints.last().timestamp / 1_000_000_000f
 
             // Accelerations
             val minAcceleration = minOf(
@@ -121,7 +124,8 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
             )
 
             val timeRange = (maxTime - minTime).coerceAtLeast(0.001f)
-            val accelerationRange = (maxAcceleration - minAcceleration).coerceAtLeast(0.001f)
+            val accelerationRange =
+                (maxAcceleration - minAcceleration).coerceAtLeast(0.001f)
 
             fun x(timestamp: Long): Float {
                 val time = timestamp / 1_000_000_000f
@@ -135,19 +139,10 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                         ((acceleration - minAcceleration) / accelerationRange) * graphHeight
             }
 
-            /*
-             * Flight time area
-             *
-             * JumpResult stores timestamps in milliseconds,
-             * while the graph uses nanoseconds.
-             */
             jumpResult?.let { result ->
 
-                val takeOffX =
-                    x(result.takeOffTime * 1_000_000L)
-
-                val landingX =
-                    x(result.landingTime * 1_000_000L)
+                val takeOffX = x(result.takeOffTime)
+                val landingX = x(result.landingTime)
 
                 // Background of the flight phase
                 drawRect(
@@ -191,7 +186,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                 )
             }
 
-            // Ligne g
+            // Gravity line
             val gravityY = y(9.81f)
 
             drawLine(
@@ -201,7 +196,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                 strokeWidth = 1f
             )
 
-            // Ligne zero
+            // Zero line
             val zeroY = y(0f)
 
             drawLine(
@@ -211,7 +206,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                 strokeWidth = 1f
             )
 
-            // draw path
+            // Draw path
             val path = Path()
 
             verticalAccelerationPoints.forEachIndexed { index, point ->
@@ -232,7 +227,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                 style = Stroke(width = 3f)
             )
 
-            // Axe X
+            // X axis
             drawLine(
                 color = axisColor,
                 start = Offset(leftPadding, topPadding + graphHeight),
@@ -240,7 +235,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                 strokeWidth = 2f
             )
 
-            // Axe Y
+            // Y axis
             drawLine(
                 color = axisColor,
                 start = Offset(leftPadding, topPadding),
@@ -258,14 +253,10 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                Text("Take-off time : ${jumpResult.takeOffTime} ms")
-                Text("Landing time : ${jumpResult.landingTime} ms")
-                Text("Flight time : ${jumpResult.flightTime} ms")
-                Text(
-                    "Height : %.1f cm".format(
-                        jumpResult.height * 100
-                    )
-                )
+                Text("Take-off time : ${(jumpResult.takeOffTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
+                Text("Landing time : ${(jumpResult.landingTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
+                Text("Flight time : ${jumpResult.flightTime / 1_000_000} ms")
+                Text("Height : %.2f cm".format(jumpResult.height * 100))
             }
         } else {
             Text(
@@ -294,8 +285,6 @@ fun JumpDetailsScreenPreview() {
         JumpDetailsScreen(
             RawJump(
                 points = List(200) { index ->
-
-                    val time = index * 5_000_000L // 5 ms
 
                     val acceleration = when (index) {
                         in 0..39 -> {
@@ -328,7 +317,7 @@ fun JumpDetailsScreenPreview() {
                     }
 
                     RawSensorPoint(
-                        timestamp = time,
+                        timestamp = index * 10_000_000L,
                         acceleration = Acceleration(
                             x = 0f,
                             y = 0f,

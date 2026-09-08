@@ -4,7 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
 /**
- * Acceleration vector measured by the phone accelerometer
+ * Acceleration vector measured by the phone accelerometer.
+ *
+ * The accelerations are expressed in m/s²
  */
 @Serializable
 data class Acceleration(

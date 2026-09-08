@@ -26,7 +26,7 @@ fun JumpResultCard(
         Spacer(Modifier.height(8.dp))
 
         Text("Flight time")
-        Text("${result.flightTime} ms")
+        Text("${result.flightTime / 1_000_000} ms")
     }
 }
 
@@ -37,7 +37,7 @@ private fun JumpResultCardPreview() {
         JumpResultCard(
             JumpResult(
                 takeOffTime = 0,
-                landingTime = 620
+                landingTime = 620_000_000
             )
         )
     }

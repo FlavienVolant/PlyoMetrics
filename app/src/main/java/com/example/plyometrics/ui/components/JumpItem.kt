@@ -74,8 +74,6 @@ fun JumpItemPreview() {
             rawJump = RawJump(
                 points = List(200) { index ->
 
-                    val time = index * 5_000_000L // 5 ms
-
                     val acceleration = when (index) {
                         in 0..39 -> {
                             9.81f
@@ -107,7 +105,7 @@ fun JumpItemPreview() {
                     }
 
                     RawSensorPoint(
-                        timestamp = time,
+                        timestamp = index * 10_000_000L,
                         acceleration = Acceleration(
                             x = 0f,
                             y = 0f,
