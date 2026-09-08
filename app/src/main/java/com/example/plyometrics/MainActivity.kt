@@ -57,11 +57,10 @@ fun AppNavigation(viewModel: SensorViewModel) {
                     selected = currentRoute == "record",
                     onClick = {
                         navController.navigate("record") {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                            popUpTo("record") {
+                                inclusive = true
                             }
                             launchSingleTop = true
-                            restoreState = true
                         }
                     },
                     icon = {
@@ -76,14 +75,13 @@ fun AppNavigation(viewModel: SensorViewModel) {
                 )
 
                 NavigationBarItem(
-                    selected = currentRoute == "jumps",
+                    selected = currentRoute == "jumps" || currentRoute == "details",
                     onClick = {
                         navController.navigate("jumps") {
-                            popUpTo(navController.graph.startDestinationId) {
-                                saveState = true
+                            popUpTo("jumps") {
+                                inclusive = true
                             }
                             launchSingleTop = true
-                            restoreState = true
                         }
                     },
                     icon = {
