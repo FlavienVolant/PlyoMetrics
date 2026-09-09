@@ -2,17 +2,24 @@ package com.example.plyometrics.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.plyometrics.analysis.JumpDetector
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.exporter.CsvSessionSerializer
+import com.example.plyometrics.serializer.CsvJumpSerializer
 import com.example.plyometrics.model.MotionSensorManager
 import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.repository.CsvJumpRepository
+import com.example.plyometrics.repository.JumpRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
     private val jumpDetector = JumpDetector()
+
+    private val repository: JumpRepository = CsvJumpRepository(application)
+
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
 
@@ -22,7 +29,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     private val _sessions = MutableStateFlow<List<RawJump>>(emptyList())
     val sessions = _sessions.asStateFlow()
 
-    private var _selectedJump = MutableStateFlow<RawJump?>(null)
+    private val _selectedJump = MutableStateFlow<RawJump?>(null)
     val selectedJump = _selectedJump.asStateFlow()
 
     private val manager = MotionSensorManager(application) { finishedSession ->
@@ -30,7 +37,16 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
 
         _jumpResult.value = jumpDetector.analyze(finishedSession)
 
-        _sessions.value += listOf(RawJump(points = finishedSession))
+        viewModelScope.launch {
+            repository.save(RawJump(points = finishedSession))
+            _sessions.value = repository.getAll()
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            _sessions.value = repository.getAll()
+        }
     }
 
     fun start() {
@@ -47,7 +63,6 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         _selectedJump.value = rawJump
     }
 
-    @Deprecated("Use exportSessions(RawJump)")
-    fun exportSession() = "{}"
-    fun exportSession(rawJump: RawJump) = CsvSessionSerializer().serialize(rawJump.points)
+    @Deprecated("For testing purpose only")
+    fun exportSession(rawJump: RawJump) = CsvJumpSerializer().serialize(rawJump)
 }
