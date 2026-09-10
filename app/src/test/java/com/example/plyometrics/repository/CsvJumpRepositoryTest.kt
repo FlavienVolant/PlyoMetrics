@@ -1,7 +1,5 @@
-package com.example.plyometrics.analysis.repository
+package com.example.plyometrics.repository
 
-import com.example.plyometrics.repository.CsvJumpRepository
-import com.example.plyometrics.repository.JumpRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path

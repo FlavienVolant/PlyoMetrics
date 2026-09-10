@@ -1,6 +1,5 @@
-package com.example.plyometrics.analysis.analysis
+package com.example.plyometrics.analysis
 
-import com.example.plyometrics.analysis.SensorFrameTransformer
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation

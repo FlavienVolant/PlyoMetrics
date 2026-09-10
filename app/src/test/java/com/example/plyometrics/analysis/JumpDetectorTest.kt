@@ -1,7 +1,5 @@
-package com.example.plyometrics.analysis.analysis
+package com.example.plyometrics.analysis
 
-import com.example.plyometrics.analysis.JumpDetector
-import com.example.plyometrics.analysis.VerticalAccelerationPoint
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

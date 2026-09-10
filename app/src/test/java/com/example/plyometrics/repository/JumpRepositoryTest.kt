@@ -1,10 +1,9 @@
-package com.example.plyometrics.analysis.repository
+package com.example.plyometrics.repository
 
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
-import com.example.plyometrics.repository.JumpRepository
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
