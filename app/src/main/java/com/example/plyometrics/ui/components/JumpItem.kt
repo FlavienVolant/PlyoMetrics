@@ -14,21 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.plyometrics.analysis.JumpDetector
+import com.example.plyometrics.analysis.AnalyzedJump
+import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.model.RawJump
-import com.example.plyometrics.model.RawSensorPoint
-import com.example.plyometrics.model.measure.Acceleration
-import com.example.plyometrics.model.measure.Rotation
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import java.text.SimpleDateFormat
 
 @Composable
 fun JumpItem(
-    rawJump: RawJump,
+    analyzedJump: AnalyzedJump,
     modifier: Modifier = Modifier
 ) {
-    val jumpResult = JumpDetector().analyze(rawJump.points)
-
     val configuration = LocalConfiguration.current
     val locale = configuration.locales[0]
 
@@ -48,13 +44,13 @@ fun JumpItem(
     ) {
         Column {
             Text(
-                text = dateFormatter.format(rawJump.date),
+                text = dateFormatter.format(analyzedJump.rawJump.date),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
 
         Text(
-            text = jumpResult?.let {
+            text = analyzedJump.result?.let {
                 String.format(
                     locale,
                     "%.2f m",
@@ -71,55 +67,9 @@ fun JumpItem(
 fun JumpItemPreview() {
     PlyoMetricsTheme {
         JumpItem(
-            rawJump = RawJump(
-                points = List(200) { index ->
-
-                    val acceleration = when (index) {
-                        in 0..39 -> {
-                            9.81f
-                        }
-
-                        in 40..59 -> {
-                            9.81f + (index - 40) * 0.8f
-                        }
-
-                        in 60..69 -> {
-                            25.8f - (index - 60) * 1.6f
-                        }
-
-                        in 70..119 -> {
-                            0.2f
-                        }
-
-                        in 120..129 -> {
-                            0.2f + (index - 120) * 2.5f
-                        }
-
-                        in 130..159 -> {
-                            22f - (index - 130) * 0.4f
-                        }
-
-                        else -> {
-                            9.81f
-                        }
-                    }
-
-                    RawSensorPoint(
-                        timestamp = index * 10_000_000L,
-                        acceleration = Acceleration(
-                            x = 0f,
-                            y = 0f,
-                            z = acceleration
-                        ),
-                        rotation = Rotation(
-                            qx = 0f,
-                            qy = 0f,
-                            qz = 0f,
-                            qw = 1f
-                        )
-                    )
-                }
-            )
+            analyzedJump = AnalyzedJump(
+                RawJump(points = emptyList()),
+                JumpResult(0L, 1_000L))
         )
     }
 }

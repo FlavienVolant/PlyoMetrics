@@ -26,7 +26,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.plyometrics.analysis.JumpDetector
+import com.example.plyometrics.analysis.AnalyzedJump
+import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.analysis.SensorFrameTransformer
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.model.RawSensorPoint
@@ -37,14 +38,14 @@ import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
 fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier) {
-    val rawJump by viewModel.selectedJump.collectAsState()
+    val analyzedJump by viewModel.selectedJump.collectAsState()
     val context = LocalContext.current
 
-    if (rawJump != null) {
+    if (analyzedJump != null) {
         JumpDetailsScreen(
-            rawJump = rawJump!!,
-            onExport = { rawJump: RawJump ->
-                val json = viewModel.exportSession(rawJump)
+            analyzedJump = analyzedJump!!,
+            onExport = { analyzedJump: AnalyzedJump ->
+                val json = viewModel.exportSession(analyzedJump.rawJump)
 
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "application/json"
@@ -75,15 +76,14 @@ fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier)
 }
 
 @Composable
-fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: Modifier = Modifier) {
+fun JumpDetailsScreen(analyzedJump: AnalyzedJump, onExport: (AnalyzedJump) -> Unit, modifier: Modifier = Modifier) {
 
     val graphColor = MaterialTheme.colorScheme.primary
     val gravityColor = MaterialTheme.colorScheme.secondary
     val axisColor = MaterialTheme.colorScheme.outline
     val zeroColor = MaterialTheme.colorScheme.outlineVariant
 
-    val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(rawJump.points)
-    val jumpResult = JumpDetector().analyze(rawJump.points)
+    val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(analyzedJump.rawJump.points)
 
     Column(modifier = modifier.fillMaxWidth()) {
 
@@ -139,7 +139,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
                         ((acceleration - minAcceleration) / accelerationRange) * graphHeight
             }
 
-            jumpResult?.let { result ->
+            analyzedJump.result?.let { result ->
 
                 val takeOffX = x(result.takeOffTime)
                 val landingX = x(result.landingTime)
@@ -247,16 +247,16 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
         Spacer(modifier = Modifier.height(16.dp))
 
         // Information
-        if (jumpResult != null) {
+        if (analyzedJump.result != null) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                Text("Take-off time : ${(jumpResult.takeOffTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
-                Text("Landing time : ${(jumpResult.landingTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
-                Text("Flight time : ${jumpResult.flightTime / 1_000_000} ms")
-                Text("Height : %.2f cm".format(jumpResult.height * 100))
+                Text("Take-off time : ${(analyzedJump.result.takeOffTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
+                Text("Landing time : ${(analyzedJump.result.landingTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
+                Text("Flight time : ${analyzedJump.result.flightTime / 1_000_000} ms")
+                Text("Height : %.2f cm".format(analyzedJump.result.height * 100))
             }
         } else {
             Text(
@@ -268,7 +268,7 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = {onExport(rawJump)},
+            onClick = {onExport(analyzedJump)},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
@@ -282,55 +282,61 @@ fun JumpDetailsScreen(rawJump: RawJump, onExport: (RawJump) -> Unit, modifier: M
 @Composable
 fun JumpDetailsScreenPreview() {
     PlyoMetricsTheme {
-        JumpDetailsScreen(
-            RawJump(
-                points = List(200) { index ->
 
-                    val acceleration = when (index) {
-                        in 0..39 -> {
-                            9.81f
-                        }
+        val rawJump = RawJump(
+            points = List(200) { index ->
 
-                        in 40..59 -> {
-                            9.81f + (index - 40) * 0.8f
-                        }
-
-                        in 60..69 -> {
-                            25.8f - (index - 60) * 1.6f
-                        }
-
-                        in 70..119 -> {
-                            0.2f
-                        }
-
-                        in 120..129 -> {
-                            0.2f + (index - 120) * 2.5f
-                        }
-
-                        in 130..159 -> {
-                            22f - (index - 130) * 0.4f
-                        }
-
-                        else -> {
-                            9.81f
-                        }
+                val acceleration = when (index) {
+                    in 0..39 -> {
+                        9.81f
                     }
 
-                    RawSensorPoint(
-                        timestamp = index * 10_000_000L,
-                        acceleration = Acceleration(
-                            x = 0f,
-                            y = 0f,
-                            z = acceleration
-                        ),
-                        rotation = Rotation(
-                            qx = 0f,
-                            qy = 0f,
-                            qz = 0f,
-                            qw = 1f
-                        )
-                    )
+                    in 40..59 -> {
+                        9.81f + (index - 40) * 0.8f
+                    }
+
+                    in 60..69 -> {
+                        25.8f - (index - 60) * 1.6f
+                    }
+
+                    in 70..119 -> {
+                        0.2f
+                    }
+
+                    in 120..129 -> {
+                        0.2f + (index - 120) * 2.5f
+                    }
+
+                    in 130..159 -> {
+                        22f - (index - 130) * 0.4f
+                    }
+
+                    else -> {
+                        9.81f
+                    }
                 }
+
+                RawSensorPoint(
+                    timestamp = index * 10_000_000L,
+                    acceleration = Acceleration(
+                        x = 0f,
+                        y = 0f,
+                        z = acceleration
+                    ),
+                    rotation = Rotation(
+                        qx = 0f,
+                        qy = 0f,
+                        qz = 0f,
+                        qw = 1f
+                    )
+                )
+            }
+        )
+
+        JumpDetailsScreen(
+            AnalyzedJump(
+                rawJump,
+                JumpResult(0L, 1_000L)
             ),
             onExport = {}
         )

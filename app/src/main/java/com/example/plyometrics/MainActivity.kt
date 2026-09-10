@@ -111,8 +111,8 @@ fun AppNavigation(viewModel: SensorViewModel) {
             composable("jumps") {
                 JumpsScreen(
                     viewModel,
-                    onJumpClicked = { rawJump ->
-                        viewModel.selectedJump(rawJump)
+                    onJumpClicked = { analyzedJump ->
+                        viewModel.selectedJump(analyzedJump)
                         navController.navigate("details")
                     }
                 )

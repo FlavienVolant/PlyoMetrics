@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.plyometrics.analysis.AnalyzedJump
+import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
@@ -28,15 +30,15 @@ import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
-fun JumpsScreen(viewModel: SensorViewModel, onJumpClicked: (RawJump) -> Unit = {}) {
+fun JumpsScreen(viewModel: SensorViewModel, onJumpClicked: (AnalyzedJump) -> Unit = {}) {
 
-    val sessions by viewModel.sessions.collectAsState()
+    val jumps by viewModel.jumps.collectAsState()
 
-    JumpsScreen(sessions, onJumpClicked)
+    JumpsScreen(jumps, onJumpClicked)
 }
 
 @Composable
-fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) {
+fun JumpsScreen(jumps: List<AnalyzedJump>, onJumpClicked: (AnalyzedJump) -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,7 +51,7 @@ fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) 
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (sessions.isEmpty()) {
+        if (jumps.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -61,11 +63,11 @@ fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) 
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                itemsIndexed(sessions) { _, rawJump ->
+                itemsIndexed(jumps) { _, analyzedJump ->
                     JumpItem(
-                        rawJump = rawJump,
+                        analyzedJump = analyzedJump,
                         modifier = Modifier.clickable{
-                            onJumpClicked(rawJump)
+                            onJumpClicked(analyzedJump)
                         }
                     )
                 }
@@ -78,48 +80,53 @@ fun JumpsScreen(sessions: List<RawJump>, onJumpClicked: (RawJump) -> Unit = {}) 
 @Composable
 fun SessionsScreenPreview() {
     PlyoMetricsTheme {
-        JumpsScreen(previewRawJumps())
+        JumpsScreen(previewJumps())
     }
 }
 
-private fun previewRawJumps(): List<RawJump> {
+private fun previewJumps(): List<AnalyzedJump> {
     return listOf(
-        RawJump(
-            points = List(100) { index ->
-                RawSensorPoint(
-                    timestamp = index * 5_000_000L,
-                    acceleration = Acceleration(
-                        x = 0f,
-                        y = 0f,
-                        z = 9.81f
-                    ),
-                    rotation = Rotation(
-                        qx = 0f,
-                        qy = 0f,
-                        qz = 0f,
-                        qw = 1f
+        AnalyzedJump(
+            RawJump(
+                points = List(100) { index ->
+                    RawSensorPoint(
+                        timestamp = index * 5_000_000L,
+                        acceleration = Acceleration(
+                            x = 0f,
+                            y = 0f,
+                            z = 9.81f
+                        ),
+                        rotation = Rotation(
+                            qx = 0f,
+                            qy = 0f,
+                            qz = 0f,
+                            qw = 1f
+                        )
                     )
-                )
-            }
+                }
+            ),
+            result = null
         ),
-
-        RawJump(
-            points = List(250) { index ->
-                RawSensorPoint(
-                    timestamp = index * 5_000_000L,
-                    acceleration = Acceleration(
-                        x = 0f,
-                        y = 0f,
-                        z = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
-                    ),
-                    rotation = Rotation(
-                        qx = 0f,
-                        qy = 0f,
-                        qz = 0f,
-                        qw = 1f
+        AnalyzedJump(
+            RawJump(
+                points = List(250) { index ->
+                    RawSensorPoint(
+                        timestamp = index * 5_000_000L,
+                        acceleration = Acceleration(
+                            x = 0f,
+                            y = 0f,
+                            z = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
+                        ),
+                        rotation = Rotation(
+                            qx = 0f,
+                            qy = 0f,
+                            qz = 0f,
+                            qw = 1f
+                        )
                     )
-                )
-            }
+                }
+            ),
+            result = JumpResult(0L, 1_000_000L)
         )
     )
 }

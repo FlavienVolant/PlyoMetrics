@@ -123,7 +123,7 @@ class JumpDetectorTest {
             VerticalAccelerationPoint(210L, 40f)
         )
 
-        val jump = detector.analyzeVerticalPoints(points)
+        val jump = detector.analyzeVerticalAccelerationPoint(points)
 
         assertNotNull(jump)
 

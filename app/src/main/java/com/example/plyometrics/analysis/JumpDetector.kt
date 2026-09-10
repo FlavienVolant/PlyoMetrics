@@ -1,6 +1,6 @@
 package com.example.plyometrics.analysis
 
-import com.example.plyometrics.model.RawSensorPoint
+import com.example.plyometrics.model.RawJump
 
 class JumpDetector (
     private val impulseThreshold: Float = 13f,
@@ -22,15 +22,15 @@ class JumpDetector (
      *
      * Returns a [JumpResult] if all events are found, null otherwise
      */
-    fun analyze(points: List<RawSensorPoint>): JumpResult? {
+    fun analyze(rawJump: RawJump): JumpResult? {
 
-        if (points.isEmpty())
+        if (rawJump.points.isEmpty())
             return null
 
-        return analyzeVerticalPoints(transformer.toWorldFrame(points))
+        return analyzeVerticalAccelerationPoint(transformer.toWorldFrame(rawJump.points))
     }
 
-    fun analyzeVerticalPoints(points: List<VerticalAccelerationPoint>): JumpResult? {
+    fun analyzeVerticalAccelerationPoint(points: List<VerticalAccelerationPoint>): JumpResult? {
         val impulse = findImpulse(points) ?: return null
         val takeOff = findTakeOff(points, impulse) ?: return null
         val landing = findLanding(points, takeOff) ?: return null
