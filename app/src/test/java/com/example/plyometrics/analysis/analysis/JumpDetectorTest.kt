@@ -1,6 +1,8 @@
-package com.example.plyometrics.analysis
+package com.example.plyometrics.analysis.analysis
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import com.example.plyometrics.analysis.JumpDetector
+import com.example.plyometrics.analysis.VerticalAccelerationPoint
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
@@ -30,8 +32,8 @@ class JumpDetectorTest {
         val impulse = detector.findImpulse(points)
 
         assertNotNull(impulse)
-        assertEquals(3L, impulse.timestamp)
-        assertEquals(20f, impulse.value)
+        Assertions.assertEquals(3L, impulse.timestamp)
+        Assertions.assertEquals(20f, impulse.value)
     }
 
     @Test
@@ -67,8 +69,8 @@ class JumpDetectorTest {
         val impulse = points[3]
         val takeOff = detector.findTakeOff(points, impulse)
 
-        assertEquals(8L, takeOff?.timestamp)
-        assertEquals(4.8f, takeOff?.value)
+        Assertions.assertEquals(8L, takeOff?.timestamp)
+        Assertions.assertEquals(4.8f, takeOff?.value)
     }
 
     @Test
@@ -91,8 +93,8 @@ class JumpDetectorTest {
         val takeOff = points[0]
         val landing = detector.findLanding(points, takeOff)
 
-        assertEquals(3L, landing?.timestamp)
-        assertEquals(4.9f, landing?.value)
+        Assertions.assertEquals(3L, landing?.timestamp)
+        Assertions.assertEquals(4.9f, landing?.value)
     }
 
     @Test
@@ -127,8 +129,8 @@ class JumpDetectorTest {
 
         assertNotNull(jump)
 
-        assertEquals(80L, jump.takeOffTime)
-        assertEquals(120L, jump.landingTime)
-        assertEquals(120L - 80L, jump.flightTime)
+        Assertions.assertEquals(80L, jump.takeOffTime)
+        Assertions.assertEquals(120L, jump.landingTime)
+        Assertions.assertEquals(120L - 80L, jump.flightTime)
     }
 }

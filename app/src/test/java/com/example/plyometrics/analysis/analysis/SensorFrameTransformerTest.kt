@@ -1,9 +1,10 @@
-package com.example.plyometrics.analysis
+package com.example.plyometrics.analysis.analysis
 
+import com.example.plyometrics.analysis.SensorFrameTransformer
 import com.example.plyometrics.model.RawSensorPoint
 import com.example.plyometrics.model.measure.Acceleration
 import com.example.plyometrics.model.measure.Rotation
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class SensorFrameTransformerTest {
@@ -26,7 +27,7 @@ class SensorFrameTransformerTest {
 
         val result = transformer.toWorldFrame(point)
 
-        assertEquals(3f, result.value, 0.0001f)
+        Assertions.assertEquals(3f, result.value, 0.0001f)
     }
 
     @Test
@@ -48,6 +49,6 @@ class SensorFrameTransformerTest {
 
         val result = transformer.toWorldFrame(point)
 
-        assertEquals(0f, result.value, 0.0001f)
+        Assertions.assertEquals(0f, result.value, 0.0001f)
     }
 }
