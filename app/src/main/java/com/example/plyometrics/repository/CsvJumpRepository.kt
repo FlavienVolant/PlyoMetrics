@@ -1,7 +1,7 @@
 package com.example.plyometrics.repository
 
-import com.example.plyometrics.serializer.CsvJumpSerializer
 import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.serializer.CsvJumpSerializer
 import java.io.File
 
 class CsvJumpRepository(private val jumpsDirectory: File): JumpRepository {

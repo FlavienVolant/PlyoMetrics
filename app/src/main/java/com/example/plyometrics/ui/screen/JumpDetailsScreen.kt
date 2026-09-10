@@ -336,7 +336,7 @@ fun JumpDetailsScreenPreview() {
         JumpDetailsScreen(
             AnalyzedJump(
                 rawJump,
-                JumpResult(0L, 1_000L)
+                JumpResult(200_000_000L, 800_000_000L)
             ),
             onExport = {}
         )

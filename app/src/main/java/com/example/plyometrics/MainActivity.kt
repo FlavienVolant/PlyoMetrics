@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -22,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.plyometrics.ui.screen.JumpDetailsScreen
+import com.example.plyometrics.ui.screen.JumpsHistoryScreen
 import com.example.plyometrics.ui.screen.JumpsScreen
 import com.example.plyometrics.ui.screen.RecordScreen
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
@@ -94,6 +96,24 @@ fun AppNavigation(viewModel: SensorViewModel) {
                         Text("Jumps")
                     }
                 )
+
+                NavigationBarItem(
+                    selected = currentRoute == "history",
+                    onClick = {
+                        navController.navigate("history") {
+                            popUpTo("history") {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.TrendingUp, contentDescription = "History")
+                    },
+                    label = {
+                        Text("History")
+                    }
+                )
             }
         }
     ) { innerPadding ->
@@ -120,6 +140,10 @@ fun AppNavigation(viewModel: SensorViewModel) {
 
             composable("details") {
                 JumpDetailsScreen(viewModel)
+            }
+
+            composable("history") {
+                JumpsHistoryScreen(viewModel)
             }
         }
     }

@@ -6,11 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.plyometrics.analysis.AnalyzedJump
 import com.example.plyometrics.analysis.JumpDetector
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.serializer.CsvJumpSerializer
 import com.example.plyometrics.model.MotionSensorManager
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.repository.CsvJumpRepository
 import com.example.plyometrics.repository.JumpRepository
+import com.example.plyometrics.serializer.CsvJumpSerializer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
