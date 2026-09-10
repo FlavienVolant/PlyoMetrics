@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.AnalyzedJump
@@ -25,7 +27,9 @@ import com.example.plyometrics.analysis.JumpResult
 import com.example.plyometrics.model.RawJump
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 @Composable
 fun JumpsHistoryScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier) {
@@ -64,10 +68,14 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
             val axisColor = MaterialTheme.colorScheme.outline
             val gridColor = MaterialTheme.colorScheme.outlineVariant
 
+            val textMeasurer = rememberTextMeasurer()
+            val textStyle = MaterialTheme.typography.labelSmall
+            val textColor = MaterialTheme.colorScheme.onBackground
+
             Canvas(
                 modifier = modifier
                     .fillMaxWidth()
-                    .height(250.dp)
+                    .height(500.dp)
             ) {
 
                 val validJumps = jumps.mapNotNull { jump ->
@@ -79,10 +87,10 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                 if (validJumps.isEmpty())
                     return@Canvas
 
-                val leftPadding = 50f
+                val leftPadding = 70f
                 val rightPadding = 20f
                 val topPadding = 20f
-                val bottomPadding = 30f
+                val bottomPadding = 45f
 
                 val graphWidth = size.width - leftPadding - rightPadding
                 val graphHeight = size.height - topPadding - bottomPadding
@@ -97,15 +105,14 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                 val heightRange =
                     (maxHeight - minHeight).coerceAtLeast(0.001)
 
-                val minDate = validJumps.minOf { it.first.rawJump.date.time }
-                val maxDate = validJumps.maxOf { it.first.rawJump.date.time }
+                fun x(index: Int): Float {
 
-                val dateRange =
-                    (maxDate - minDate).coerceAtLeast(1L)
+                    if (validJumps.size == 1) {
+                        return leftPadding + graphWidth / 2
+                    }
 
-                fun x(date: Date): Float {
                     return leftPadding +
-                            ((date.time - minDate).toFloat() / dateRange) *
+                            index.toFloat() / (validJumps.size - 1) *
                             graphWidth
                 }
 
@@ -132,6 +139,22 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                         end = Offset(size.width - rightPadding, y),
                         strokeWidth = 1f
                     )
+
+                    val label = "${(value * 100).toInt()} cm"
+                    val text = textMeasurer.measure(
+                        text = label,
+                        style = textStyle
+                    )
+
+                    drawText(
+                        textLayoutResult = text,
+                        topLeft = Offset(
+                            leftPadding - text.size.width - 8f,
+                            y - text.size.height / 2f
+                        ),
+                        color = textColor
+                    )
+                    
                 }
 
                 // Y axis
@@ -150,11 +173,38 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                     strokeWidth = 2f
                 )
 
+                // X labels
+                validJumps.forEachIndexed { index, (jump, _) ->
+                    val px = x(index)
+                    val py = topPadding + graphHeight
+
+                    val dateFormatter = SimpleDateFormat(
+                        "dd/MM",
+                        Locale.getDefault()
+                    )
+
+                    val label = dateFormatter.format(jump.rawJump.date)
+
+                    val text = textMeasurer.measure(
+                        text = label,
+                        style = textStyle
+                    )
+
+                    drawText(
+                        textLayoutResult = text,
+                        topLeft = Offset(
+                            px - text.size.width / 2f,
+                            py + 8f
+                        ),
+                        color = textColor
+                    )
+                }
+
                 // Curve
                 val path = Path()
 
-                validJumps.forEachIndexed { index, (jump, result) ->
-                    val px = x(jump.rawJump.date)
+                validJumps.forEachIndexed { index, (_, result) ->
+                    val px = x(index)
                     val py = y(result.height)
 
                     if (index == 0) {
@@ -171,12 +221,12 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                 )
 
                 // Points
-                validJumps.forEach { (jump, result) ->
+                validJumps.forEachIndexed { index, (_, result) ->
                     drawCircle(
                         color = graphColor,
                         radius = 5f,
                         center = Offset(
-                            x(jump.rawJump.date),
+                            x(index),
                             y(result.height).toFloat()
                         )
                     )
