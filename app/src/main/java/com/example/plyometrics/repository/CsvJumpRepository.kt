@@ -1,16 +1,15 @@
 package com.example.plyometrics.repository
 
-import android.content.Context
 import com.example.plyometrics.serializer.CsvJumpSerializer
 import com.example.plyometrics.model.RawJump
 import java.io.File
 
-class CsvJumpRepository(context: Context): JumpRepository {
+class CsvJumpRepository(private val jumpsDirectory: File): JumpRepository {
 
     private val serializer = CsvJumpSerializer()
 
-    private val jumpsDirectory = File(context.filesDir, "jumps").apply {
-        mkdirs()
+    init {
+        jumpsDirectory.mkdirs()
     }
 
     override suspend fun save(jump: RawJump) {
@@ -29,6 +28,7 @@ class CsvJumpRepository(context: Context): JumpRepository {
                     serializer.deserialize(file.readText())
                 }.getOrNull()
             }
+            ?.sortedBy { it.date }
             ?: emptyList()
     }
 

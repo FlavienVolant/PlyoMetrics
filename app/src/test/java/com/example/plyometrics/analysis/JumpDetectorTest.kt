@@ -1,16 +1,16 @@
 package com.example.plyometrics.analysis
 
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertNull
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertNull
 
 class JumpDetectorTest {
 
     private lateinit var detector: JumpDetector
 
-    @Before
+    @BeforeEach
     fun setUp() {
         detector = JumpDetector(peakConfirmationPoints = 2)
     }
@@ -30,8 +30,8 @@ class JumpDetectorTest {
         val impulse = detector.findImpulse(points)
 
         assertNotNull(impulse)
-        assertEquals(3L, impulse?.timestamp)
-        assertEquals(20f, impulse?.value)
+        assertEquals(3L, impulse.timestamp)
+        assertEquals(20f, impulse.value)
     }
 
     @Test
@@ -127,7 +127,7 @@ class JumpDetectorTest {
 
         assertNotNull(jump)
 
-        assertEquals(80L, jump!!.takeOffTime)
+        assertEquals(80L, jump.takeOffTime)
         assertEquals(120L, jump.landingTime)
         assertEquals(120L - 80L, jump.flightTime)
     }

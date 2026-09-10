@@ -18,7 +18,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
 
     private val jumpDetector = JumpDetector()
 
-    private val repository: JumpRepository = CsvJumpRepository(application)
+    private val repository: JumpRepository = CsvJumpRepository(application.filesDir)
 
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
