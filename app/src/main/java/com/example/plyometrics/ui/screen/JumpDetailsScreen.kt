@@ -4,14 +4,20 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -60,6 +66,7 @@ fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier)
                     Log.e("JumpDetailsScreen", e.toString())
                 }
             },
+            onDelete = viewModel::deleteJump,
             modifier = modifier
         )
     } else {
@@ -76,7 +83,11 @@ fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier)
 }
 
 @Composable
-fun JumpDetailsScreen(analyzedJump: AnalyzedJump, onExport: (AnalyzedJump) -> Unit, modifier: Modifier = Modifier) {
+fun JumpDetailsScreen(
+    analyzedJump: AnalyzedJump,
+    onExport: (AnalyzedJump) -> Unit,
+    onDelete: (RawJump) -> Unit,
+    modifier: Modifier = Modifier) {
 
     val graphColor = MaterialTheme.colorScheme.primary
     val gravityColor = MaterialTheme.colorScheme.secondary
@@ -267,13 +278,27 @@ fun JumpDetailsScreen(analyzedJump: AnalyzedJump, onExport: (AnalyzedJump) -> Un
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {onExport(analyzedJump)},
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Export Jump")
+            Button(
+                onClick = { onExport(analyzedJump) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Export Jump")
+            }
+
+            IconButton(
+                onClick = { onDelete(analyzedJump.rawJump) }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete jump"
+                )
+            }
         }
     }
 }
@@ -338,7 +363,8 @@ fun JumpDetailsScreenPreview() {
                 rawJump,
                 JumpResult(200_000_000L, 800_000_000L)
             ),
-            onExport = {}
+            onExport = {},
+            onDelete = {}
         )
     }
 }

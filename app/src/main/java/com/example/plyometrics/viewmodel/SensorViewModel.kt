@@ -71,8 +71,15 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         _selectedJump.value = analyzedJump
     }
 
-    @Deprecated("For testing purpose only")
     fun exportSession(rawJump: RawJump) = CsvJumpSerializer().serialize(rawJump)
+
+    fun deleteJump(rawJump: RawJump) {
+
+        viewModelScope.launch {
+            repository.delete(rawJump.id)
+            _jumps.value = repository.getAll().map(::toAnalyzedJump)
+        }
+    }
 
     private fun toAnalyzedJump(rawJump: RawJump): AnalyzedJump {
         return AnalyzedJump(rawJump, jumpDetector.analyze(rawJump))
