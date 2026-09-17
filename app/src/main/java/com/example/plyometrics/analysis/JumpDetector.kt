@@ -1,16 +1,24 @@
 package com.example.plyometrics.analysis
 
+import com.example.plyometrics.analysis.filters.MovingAverageFilter
+import com.example.plyometrics.analysis.filters.SavitzkyGolayFilter
 import com.example.plyometrics.model.RawJump
 
 class JumpDetector (
     private val impulseThreshold: Float = 13f,
-    private val takeOffThreshold: Float = 5f,
+    private val flightThreshold: Float = 5f,
     private val landingThreshold: Float = 13f,
-    private val peakConfirmationPoints: Int = 10
+
+    private val confirmationDurationMs: Long = 50L,
+    private val minimumFlightTimeMs: Long = 150L
 )
 
 {
     private val transformer = SensorFrameTransformer()
+    private val accelerationFilter = SavitzkyGolayFilter(
+        windowSize = 10,
+        polynomialOrder = 2
+    )
 
     /**
      * Return the jump of a sensor session
@@ -27,94 +35,156 @@ class JumpDetector (
         if (rawJump.points.isEmpty())
             return null
 
-        return analyzeVerticalAccelerationPoint(transformer.toWorldFrame(rawJump.points))
+        val worldPoints = transformer.toWorldFrame(rawJump.points)
+
+        val filteredPoints = accelerationFilter.filter(worldPoints)
+
+        return analyzeVerticalAccelerationPoint(filteredPoints)
     }
 
     fun analyzeVerticalAccelerationPoint(points: List<VerticalAccelerationPoint>): JumpResult? {
-        val impulse = findImpulse(points) ?: return null
-        val takeOff = findTakeOff(points, impulse) ?: return null
-        val landing = findLanding(points, takeOff) ?: return null
+        val impulseIndex = findImpulse(points) ?: return null
+        val takeOffIndex = findTakeOff(points, impulseIndex) ?: return null
+        val landingIndex = findLanding(points, takeOffIndex) ?: return null
 
-        return JumpResult(takeOff.timestamp, landing.timestamp)
+        val flightTime = points[landingIndex].timestamp - points[takeOffIndex].timestamp
+
+        if (flightTime < minimumFlightTimeMs * 1_000_000)
+            return null
+
+        return JumpResult(
+            points[takeOffIndex].timestamp,
+            points[landingIndex].timestamp
+        )
     }
 
     /**
      * Find the first local maximum above IMPULSE_THRESHOLD
      */
-    fun findImpulse(points: List<VerticalAccelerationPoint>): VerticalAccelerationPoint? {
-        for(i in 0 .. points.size - peakConfirmationPoints) {
+    fun findImpulse(points: List<VerticalAccelerationPoint>): Int? {
+
+        for (i in points.indices) {
+
             val current = points[i]
 
-            if(current.value < impulseThreshold)
+            if (current.value < impulseThreshold)
                 continue
 
-            // confirm that the signal decreases after the peak
+            val confirmationEnd = current.timestamp + confirmationDurationMs * 1_000_000
+
             var isPeak = true
-            for(j in 1..peakConfirmationPoints) {
-                if (points[i + j].value >= current.value){
+
+            for (j in i + 1 until points.size) {
+
+                if (points[j].timestamp > confirmationEnd)
+                    break
+
+                if (points[j].value >= current.value) {
                     isPeak = false
                     break
                 }
             }
 
-            if(!isPeak)
-                continue
-
-            return current
+            if (isPeak)
+                return i
         }
 
         return null
     }
 
-    fun findTakeOff(points: List<VerticalAccelerationPoint>, impulse: VerticalAccelerationPoint): VerticalAccelerationPoint? {
-        val impulseIndex = points.indexOfFirst { it.timestamp == impulse.timestamp }
+    fun findTakeOff(points: List<VerticalAccelerationPoint>, impulseIndex: Int): Int? {
 
-        if (impulseIndex < 0)
-            return null
+        for (i in impulseIndex + 1 until points.size) {
 
-        return points
-            .drop(impulseIndex + 1)
-            .firstOrNull{ it.value < takeOffThreshold }
-    }
-
-    fun findLanding(points: List<VerticalAccelerationPoint>, takeOff: VerticalAccelerationPoint): VerticalAccelerationPoint? {
-        val takeOffIndex = points.indexOfFirst { it.timestamp == takeOff.timestamp }
-
-        if (takeOffIndex < 0)
-            return null
-
-        for(i in takeOffIndex + 1 until points.size - peakConfirmationPoints) {
-            val current = points[i]
-
-            if(current.value < landingThreshold)
+            if (points[i].value >= flightThreshold)
                 continue
 
-            var isPeak = true
+            val confirmationEnd = points[i].timestamp + confirmationDurationMs * 1_000_000
 
-            for(j in 1..peakConfirmationPoints) {
-                if (points[i + j].value >= current.value) {
-                    isPeak = false
+            var confirmed = true
+
+            for (j in i + 1 until points.size) {
+
+                if (points[j].timestamp > confirmationEnd)
+                    break
+
+                if (points[j].value > flightThreshold + 2f) {
+                    confirmed = false
                     break
                 }
             }
 
-            if(!isPeak)
-                continue
-
-            /*
-             * We found the landing peak.
-             *
-             * Now walk backwards through the increasing slope
-             * to find where this rise started.
-             */
-            var j = i - 1
-
-            while (points[j].value > takeOffThreshold)
-                j --
-
-            return points[j]
+            if (confirmed)
+                return i
         }
 
         return null
+    }
+
+    fun findLanding(points: List<VerticalAccelerationPoint>, takeOffIndex: Int): Int? {
+
+        for (i in takeOffIndex + 1 until points.size) {
+
+            // Ignore unrealistic short flight phases
+            val flightTime = points[i].timestamp - points[takeOffIndex].timestamp
+
+            if (flightTime < 150_000_000)
+                continue
+
+            if (points[i].value < landingThreshold)
+                continue
+
+            if (!isPeak(points, i))
+                continue
+
+            return findLandingStart(points, i)
+        }
+
+        return null
+    }
+
+    fun isPeak(points: List<VerticalAccelerationPoint>, index: Int): Boolean {
+
+        val peak = points[index]
+
+        val endTime = peak.timestamp + confirmationDurationMs * 1_000_000
+
+        for (i in index + 1 until points.size) {
+
+            if (points[i].timestamp > endTime)
+                break
+
+            if (points[i].value >= peak.value)
+                return false
+        }
+
+        return true
+    }
+
+    fun findLandingStart(points: List<VerticalAccelerationPoint>, peakIndex: Int): Int {
+
+        var i = peakIndex - 1
+
+        while (i > 0) {
+
+            val current = points[i]
+            val previous = points[i - 1]
+
+            val dt = (current.timestamp - previous.timestamp) / 1_000_000_000f
+
+            if (dt <= 0f) {
+                i--
+                continue
+            }
+
+            val slope = (current.value - previous.value) / dt
+
+            if (current.value < 5f && slope > 50f)
+                return i
+
+            i--
+        }
+
+        return peakIndex
     }
 }
