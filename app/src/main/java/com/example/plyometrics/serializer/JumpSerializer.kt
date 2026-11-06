@@ -1,6 +1,6 @@
 package com.example.plyometrics.serializer
 
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.measurement.RawJump
 
 interface JumpSerializer {
     fun serialize(jump: RawJump): String

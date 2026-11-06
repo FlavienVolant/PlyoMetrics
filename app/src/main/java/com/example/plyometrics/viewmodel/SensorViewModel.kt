@@ -1,15 +1,20 @@
 package com.example.plyometrics.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.plyometrics.analysis.AnalyzedJump
-import com.example.plyometrics.analysis.JumpDetector
+import com.example.plyometrics.analysis.JumpAnalysisMode
+import com.example.plyometrics.analysis.JumpAnalysisStrategy
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.model.MotionSensorManager
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.analysis.detection.JumpDetector
+import com.example.plyometrics.analysis.filter.SavitzkyGolayFilter
+import com.example.plyometrics.analysis.simulation.SimulationStrategy
+import com.example.plyometrics.measurement.RawJump
 import com.example.plyometrics.repository.CsvJumpRepository
 import com.example.plyometrics.repository.JumpRepository
+import com.example.plyometrics.sensor.MotionSensorManager
 import com.example.plyometrics.serializer.CsvJumpSerializer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +23,10 @@ import kotlinx.coroutines.launch
 
 class SensorViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val jumpDetector = JumpDetector()
+    private var analysisStrategy: JumpAnalysisStrategy = SimulationStrategy()
+
+    private val _analysisMode = MutableStateFlow(JumpAnalysisMode.SIMULATION)
+    val analysisMode = _analysisMode.asStateFlow()
 
     private val repository: JumpRepository = CsvJumpRepository(application.filesDir)
 
@@ -38,22 +46,22 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         _isRunning.value = false
 
         val rawJump = RawJump(points = finishedSession)
+        val analyzedJump = analysisStrategy.analyze(rawJump)
 
-        _jumpResult.value = jumpDetector.analyze(rawJump)
+        _jumpResult.value = analyzedJump.result
 
         viewModelScope.launch {
-
             repository.save(rawJump)
 
             _jumps.update { jumps ->
-                jumps + toAnalyzedJump(rawJump)
+                jumps + analyzedJump
             }
         }
     }
 
     init {
         viewModelScope.launch {
-            _jumps.value = repository.getAll().map(::toAnalyzedJump)
+            _jumps.value = repository.getAll().map(analysisStrategy::analyze)
         }
     }
 
@@ -71,17 +79,29 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         _selectedJump.value = analyzedJump
     }
 
-    fun exportSession(rawJump: RawJump) = CsvJumpSerializer().serialize(rawJump)
+    fun exportSession(rawJump: RawJump): String {
+        Log.d("JumpExport", "Number of points: ${rawJump.points.size}")
+        return CsvJumpSerializer().serialize(rawJump)
+    }
 
     fun deleteJump(rawJump: RawJump) {
 
         viewModelScope.launch {
             repository.delete(rawJump.id)
-            _jumps.value = repository.getAll().map(::toAnalyzedJump)
+            _jumps.value = repository.getAll().map(analysisStrategy::analyze)
         }
     }
 
-    private fun toAnalyzedJump(rawJump: RawJump): AnalyzedJump {
-        return AnalyzedJump(rawJump, jumpDetector.analyze(rawJump))
+    fun selectAnalysisMode(mode: JumpAnalysisMode) {
+        analysisStrategy = when (mode) {
+            JumpAnalysisMode.DETECTION -> JumpDetector()
+            JumpAnalysisMode.SIMULATION -> SimulationStrategy(filter = SavitzkyGolayFilter())
+        }
+
+        _analysisMode.value = mode
+
+        viewModelScope.launch {
+            _jumps.value = repository.getAll().map(analysisStrategy::analyze)
+        }
     }
 }

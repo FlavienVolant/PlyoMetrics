@@ -3,7 +3,6 @@ package com.example.plyometrics.ui.screen
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.util.Log
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,20 +24,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.AnalyzedJump
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.analysis.SensorFrameTransformer
-import com.example.plyometrics.model.RawJump
-import com.example.plyometrics.model.RawSensorPoint
-import com.example.plyometrics.model.measure.Acceleration
-import com.example.plyometrics.model.measure.Rotation
+import com.example.plyometrics.analysis.visualization.DetectionChartPoint
+import com.example.plyometrics.analysis.visualization.JumpChartData
+import com.example.plyometrics.measurement.RawJump
+import com.example.plyometrics.measurement.RawSensorPoint
+import com.example.plyometrics.model.Acceleration
+import com.example.plyometrics.model.Rotation
+import com.example.plyometrics.ui.components.DetectionJumpChart
+import com.example.plyometrics.ui.components.SimulationJumpChart
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 
@@ -54,7 +52,7 @@ fun JumpDetailsScreen(viewModel: SensorViewModel, modifier: Modifier = Modifier)
                 val json = viewModel.exportSession(analyzedJump.rawJump)
 
                 val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "application/json"
+                    type = "text/csv"
                     putExtra(Intent.EXTRA_TEXT, json)
                 }
 
@@ -87,187 +85,62 @@ fun JumpDetailsScreen(
     analyzedJump: AnalyzedJump,
     onExport: (AnalyzedJump) -> Unit,
     onDelete: (RawJump) -> Unit,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier)
+{
 
-    val graphColor = MaterialTheme.colorScheme.primary
-    val gravityColor = MaterialTheme.colorScheme.secondary
-    val axisColor = MaterialTheme.colorScheme.outline
-    val zeroColor = MaterialTheme.colorScheme.outlineVariant
-
-    val verticalAccelerationPoints = SensorFrameTransformer().toWorldFrame(analyzedJump.rawJump.points)
+    val chartData = analyzedJump.chartData
+    val result = analyzedJump.result
 
     Column(modifier = modifier.fillMaxWidth()) {
 
-        Canvas(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(250.dp)
-        ) {
-
-            if (verticalAccelerationPoints.isEmpty()) {
-                return@Canvas
-            }
-
-            val leftPadding = 50f
-            val rightPadding = 20f
-            val topPadding = 20f
-            val bottomPadding = 30f
-
-            val graphWidth = size.width - leftPadding - rightPadding
-            val graphHeight = size.height - topPadding - bottomPadding
-
-            // Time in seconds
-            val minTime =
-                verticalAccelerationPoints.first().timestamp / 1_000_000_000f
-
-            val maxTime =
-                verticalAccelerationPoints.last().timestamp / 1_000_000_000f
-
-            // Accelerations
-            val minAcceleration = minOf(
-                verticalAccelerationPoints.minOf { it.value },
-                0f
-            )
-
-            val maxAcceleration = maxOf(
-                verticalAccelerationPoints.maxOf { it.value },
-                9.81f
-            )
-
-            val timeRange = (maxTime - minTime).coerceAtLeast(0.001f)
-            val accelerationRange =
-                (maxAcceleration - minAcceleration).coerceAtLeast(0.001f)
-
-            fun x(timestamp: Long): Float {
-                val time = timestamp / 1_000_000_000f
-
-                return leftPadding +
-                        ((time - minTime) / timeRange) * graphWidth
-            }
-
-            fun y(acceleration: Float): Float {
-                return topPadding + graphHeight -
-                        ((acceleration - minAcceleration) / accelerationRange) * graphHeight
-            }
-
-            analyzedJump.result?.let { result ->
-
-                val takeOffX = x(result.takeOffTime)
-                val landingX = x(result.landingTime)
-
-                // Background of the flight phase
-                drawRect(
-                    color = graphColor.copy(alpha = 0.15f),
-                    topLeft = Offset(
-                        takeOffX,
-                        topPadding
-                    ),
-                    size = Size(
-                        width = landingX - takeOffX,
-                        height = graphHeight
-                    )
-                )
-
-                // Take-off line
-                drawLine(
-                    color = graphColor,
-                    start = Offset(
-                        takeOffX,
-                        topPadding
-                    ),
-                    end = Offset(
-                        takeOffX,
-                        topPadding + graphHeight
-                    ),
-                    strokeWidth = 2f
-                )
-
-                // Landing line
-                drawLine(
-                    color = graphColor,
-                    start = Offset(
-                        landingX,
-                        topPadding
-                    ),
-                    end = Offset(
-                        landingX,
-                        topPadding + graphHeight
-                    ),
-                    strokeWidth = 2f
+        when(chartData) {
+            is JumpChartData.Detection -> {
+                DetectionJumpChart(
+                    points = chartData.points,
+                    result = analyzedJump.result,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
 
-            // Gravity line
-            val gravityY = y(9.81f)
-
-            drawLine(
-                color = gravityColor,
-                start = Offset(leftPadding, gravityY),
-                end = Offset(size.width - rightPadding, gravityY),
-                strokeWidth = 1f
-            )
-
-            // Zero line
-            val zeroY = y(0f)
-
-            drawLine(
-                color = zeroColor,
-                start = Offset(leftPadding, zeroY),
-                end = Offset(size.width - rightPadding, zeroY),
-                strokeWidth = 1f
-            )
-
-            // Draw path
-            val path = Path()
-
-            verticalAccelerationPoints.forEachIndexed { index, point ->
-
-                val px = x(point.timestamp)
-                val py = y(point.value)
-
-                if (index == 0) {
-                    path.moveTo(px, py)
-                } else {
-                    path.lineTo(px, py)
-                }
+            is JumpChartData.Simulation -> {
+                SimulationJumpChart(
+                    points = chartData.points,
+                    result = analyzedJump.result,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
 
-            drawPath(
-                color = graphColor,
-                path = path,
-                style = Stroke(width = 3f)
-            )
-
-            // X axis
-            drawLine(
-                color = axisColor,
-                start = Offset(leftPadding, topPadding + graphHeight),
-                end = Offset(size.width - rightPadding, topPadding + graphHeight),
-                strokeWidth = 2f
-            )
-
-            // Y axis
-            drawLine(
-                color = axisColor,
-                start = Offset(leftPadding, topPadding),
-                end = Offset(leftPadding, topPadding + graphHeight),
-                strokeWidth = 2f
-            )
+            null -> {
+                Text("No chart data available", modifier = Modifier.padding(horizontal = 16.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Information
-        if (analyzedJump.result != null) {
+        if (result != null) {
+            val recordingStartTime =
+                analyzedJump.rawJump.points.firstOrNull()?.timestamp ?: 0L
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
-                Text("Take-off time : ${(analyzedJump.result.takeOffTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
-                Text("Landing time : ${(analyzedJump.result.landingTime - verticalAccelerationPoints[0].timestamp) / 1_000_000} ms")
-                Text("Flight time : ${analyzedJump.result.flightTime / 1_000_000} ms")
-                Text("Height : %.2f cm".format(analyzedJump.result.height * 100))
+                Text(
+                    "Take-off time: ${
+                        (result.takeOffTime - recordingStartTime) / 1_000_000
+                    } ms"
+                )
+
+                Text(
+                    "Landing time: ${
+                        (result.landingTime - recordingStartTime) / 1_000_000
+                    } ms"
+                )
+
+                Text("Flight time: ${result.flightTime / 1_000_000} ms")
+
+                Text("Height: %.2f cm".format(result.height * 100))
             }
         } else {
             Text(
@@ -307,38 +180,16 @@ fun JumpDetailsScreen(
 @Composable
 fun JumpDetailsScreenPreview() {
     PlyoMetricsTheme {
-
         val rawJump = RawJump(
             points = List(200) { index ->
-
                 val acceleration = when (index) {
-                    in 0..39 -> {
-                        9.81f
-                    }
-
-                    in 40..59 -> {
-                        9.81f + (index - 40) * 0.8f
-                    }
-
-                    in 60..69 -> {
-                        25.8f - (index - 60) * 1.6f
-                    }
-
-                    in 70..119 -> {
-                        0.2f
-                    }
-
-                    in 120..129 -> {
-                        0.2f + (index - 120) * 2.5f
-                    }
-
-                    in 130..159 -> {
-                        22f - (index - 130) * 0.4f
-                    }
-
-                    else -> {
-                        9.81f
-                    }
+                    in 0..39 -> 9.81f
+                    in 40..59 -> 9.81f + (index - 40) * 0.8f
+                    in 60..69 -> 25.8f - (index - 60) * 1.6f
+                    in 70..119 -> 0.2f
+                    in 120..129 -> 0.2f + (index - 120) * 2.5f
+                    in 130..159 -> 22f - (index - 130) * 0.4f
+                    else -> 9.81f
                 }
 
                 RawSensorPoint(
@@ -358,11 +209,35 @@ fun JumpDetailsScreenPreview() {
             }
         )
 
-        JumpDetailsScreen(
-            AnalyzedJump(
-                rawJump,
-                JumpResult(200_000_000L, 800_000_000L)
+        val chartPoints = List(200) { index ->
+            val acceleration = when (index) {
+                in 0..39 -> 0.1f
+                in 40..59 -> (index - 40) * 0.8f
+                in 60..69 -> 15f - (index - 60) * 1.5f
+                in 70..119 -> 0.2f
+                in 120..129 -> 0.2f + (index - 120) * 2.5f
+                in 130..159 -> 22f - (index - 130) * 0.4f
+                else -> 0f
+            }
+
+            DetectionChartPoint(
+                timestamp = index * 10_000_000L,
+                acceleration = acceleration
+            )
+        }
+
+        val analyzedJump = AnalyzedJump(
+            rawJump = rawJump,
+            result = JumpResult(
+                takeOffTime = 400_000_000L,
+                landingTime = 1_200_000_000L,
+                height = 0.5f
             ),
+            chartData = JumpChartData.Detection(chartPoints)
+        )
+
+        JumpDetailsScreen(
+            analyzedJump = analyzedJump,
             onExport = {},
             onDelete = {}
         )

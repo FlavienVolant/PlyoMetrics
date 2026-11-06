@@ -1,6 +1,6 @@
 package com.example.plyometrics.repository
 
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.measurement.RawJump
 
 interface JumpRepository {
     suspend fun save(jump: RawJump)

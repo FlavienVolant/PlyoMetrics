@@ -21,13 +21,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.AnalyzedJump
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.model.RawJump
-import com.example.plyometrics.model.RawSensorPoint
-import com.example.plyometrics.model.measure.Acceleration
-import com.example.plyometrics.model.measure.Rotation
+import com.example.plyometrics.measurement.RawJump
+import com.example.plyometrics.measurement.RawSensorPoint
+import com.example.plyometrics.model.Acceleration
+import com.example.plyometrics.model.Rotation
 import com.example.plyometrics.ui.components.JumpItem
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
+import kotlin.math.sin
 
 @Composable
 fun JumpsScreen(viewModel: SensorViewModel, onJumpClicked: (AnalyzedJump) -> Unit = {}) {
@@ -105,7 +106,8 @@ private fun previewJumps(): List<AnalyzedJump> {
                     )
                 }
             ),
-            result = null
+            result = null,
+            null
         ),
         AnalyzedJump(
             RawJump(
@@ -115,7 +117,7 @@ private fun previewJumps(): List<AnalyzedJump> {
                         acceleration = Acceleration(
                             x = 0f,
                             y = 0f,
-                            z = 9.81f + kotlin.math.sin(index * 0.1).toFloat() * 2f
+                            z = 9.81f + sin(index * 0.1).toFloat() * 2f
                         ),
                         rotation = Rotation(
                             qx = 0f,
@@ -126,7 +128,11 @@ private fun previewJumps(): List<AnalyzedJump> {
                     )
                 }
             ),
-            result = JumpResult(0L, 1_000_000L)
+            result = JumpResult(
+                0L,
+                1_000_000L,
+                15.5f),
+            null
         )
     )
 }

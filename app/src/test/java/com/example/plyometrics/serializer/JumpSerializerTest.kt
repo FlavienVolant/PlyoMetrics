@@ -1,9 +1,9 @@
 package com.example.plyometrics.serializer
 
-import com.example.plyometrics.model.RawJump
-import com.example.plyometrics.model.RawSensorPoint
-import com.example.plyometrics.model.measure.Acceleration
-import com.example.plyometrics.model.measure.Rotation
+import com.example.plyometrics.measurement.RawJump
+import com.example.plyometrics.measurement.RawSensorPoint
+import com.example.plyometrics.model.Acceleration
+import com.example.plyometrics.model.Rotation
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary

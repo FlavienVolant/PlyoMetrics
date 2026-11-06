@@ -37,7 +37,8 @@ private fun JumpResultCardPreview() {
         JumpResultCard(
             JumpResult(
                 takeOffTime = 0,
-                landingTime = 620_000_000
+                landingTime = 620_000_000,
+                height = 0.1f
             )
         )
     }

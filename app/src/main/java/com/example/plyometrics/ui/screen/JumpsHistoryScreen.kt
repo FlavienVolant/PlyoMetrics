@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.AnalyzedJump
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.measurement.RawJump
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import com.example.plyometrics.viewmodel.SensorViewModel
 import java.text.SimpleDateFormat
@@ -116,7 +116,7 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                             graphWidth
                 }
 
-                fun y(height: Double): Double {
+                fun y(height: Float): Double {
                     return topPadding + graphHeight -
                             ((height - minHeight) / heightRange) *
                             graphHeight
@@ -131,7 +131,7 @@ fun JumpsHistoryScreen(jumps: List<AnalyzedJump>, modifier: Modifier = Modifier)
                                 (maxHeight - minHeight) *
                                 i / numberOfGridLines
 
-                    val y = y(value).toFloat()
+                    val y = y(value.toFloat()).toFloat()
 
                     drawLine(
                         color = gridColor,
@@ -264,8 +264,10 @@ fun JumpsHistoryScreenPreview() {
             ),
             result = JumpResult(
                 takeOffTime = takeOffTime,
-                landingTime = landingTime
-            )
+                landingTime = landingTime,
+                height = 20.5f
+            ),
+            null
         )
     }
 

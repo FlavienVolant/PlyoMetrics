@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.plyometrics.analysis.AnalyzedJump
 import com.example.plyometrics.analysis.JumpResult
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.measurement.RawJump
 import com.example.plyometrics.ui.theme.PlyoMetricsTheme
 import java.text.SimpleDateFormat
 
@@ -69,7 +69,8 @@ fun JumpItemPreview() {
         JumpItem(
             analyzedJump = AnalyzedJump(
                 RawJump(points = emptyList()),
-                JumpResult(0L, 1_000L))
+                JumpResult(0L, 1_000L, height = 50.2f),
+                null)
         )
     }
 }

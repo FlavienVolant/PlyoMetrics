@@ -1,6 +1,6 @@
 package com.example.plyometrics.repository
 
-import com.example.plyometrics.model.RawJump
+import com.example.plyometrics.measurement.RawJump
 import com.example.plyometrics.serializer.CsvJumpSerializer
 import java.io.File
 

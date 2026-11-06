@@ -12,7 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.plyometrics.analysis.JumpAnalysisMode
 import com.example.plyometrics.analysis.JumpResult
+import com.example.plyometrics.ui.components.AnalysisModeSelector
 import com.example.plyometrics.ui.components.EmptyState
 import com.example.plyometrics.ui.components.JumpResultCard
 import com.example.plyometrics.ui.components.RecordingCard
@@ -22,13 +24,15 @@ import com.example.plyometrics.viewmodel.SensorViewModel
 
 @Composable
 fun RecordScreen(viewModel: SensorViewModel) {
-
     val isRunning by viewModel.isRunning.collectAsState()
     val result by viewModel.jumpResult.collectAsState()
+    val analysisMode by viewModel.analysisMode.collectAsState()
 
     RecordScreen(
         isRunning = isRunning,
         result = result,
+        analysisMode = analysisMode,
+        onAnalysisModeChange = viewModel::selectAnalysisMode,
         onStartStop = {
             if (isRunning) {
                 viewModel.stop()
@@ -43,7 +47,9 @@ fun RecordScreen(viewModel: SensorViewModel) {
 private fun RecordScreen(
     isRunning: Boolean,
     result: JumpResult?,
-    onStartStop: () -> Unit
+    onStartStop: () -> Unit,
+    analysisMode: JumpAnalysisMode,
+    onAnalysisModeChange: (JumpAnalysisMode) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -53,11 +59,17 @@ private fun RecordScreen(
 
         when {
             isRunning -> RecordingCard()
-
             result != null -> {JumpResultCard(result)}
-
             else -> EmptyState()
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        AnalysisModeSelector(
+            selectedMode = analysisMode,
+            enabled = !isRunning,
+            onModeChange = onAnalysisModeChange
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -75,7 +87,9 @@ private fun SensorScreenReadyNotRunningPreview() {
         RecordScreen(
             isRunning = false,
             result = null,
-            onStartStop = {}
+            onStartStop = {},
+            analysisMode = JumpAnalysisMode.SIMULATION,
+            onAnalysisModeChange = {}
         )
     }
 }
@@ -87,7 +101,9 @@ private fun SensorScreenReadyRunningPreview() {
         RecordScreen(
             isRunning = true,
             result = null,
-            onStartStop = {}
+            onStartStop = {},
+            analysisMode = JumpAnalysisMode.SIMULATION,
+            onAnalysisModeChange = {}
         )
     }
 }
@@ -100,9 +116,12 @@ private fun SensorScreenReadyWithResultPreview() {
             isRunning = false,
             result = JumpResult(
                 takeOffTime = 0,
-                landingTime = 620
+                landingTime = 620,
+                height = 5.5f,
             ),
-            onStartStop = {}
+            onStartStop = {},
+            analysisMode = JumpAnalysisMode.SIMULATION,
+            onAnalysisModeChange = {}
         )
     }
 }
